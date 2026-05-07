@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import saints from '../data/saints.json' with { type: 'json' };
-import situations from '../data/situations.json' with { type: 'json' };
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const saints = JSON.parse(readFileSync(resolve(here, '../data/saints.json'), 'utf8'));
+const situations = JSON.parse(readFileSync(resolve(here, '../data/situations.json'), 'utf8'));
 
 test('seed data meets minimum counts', () => {
   assert.ok(Array.isArray(saints));
