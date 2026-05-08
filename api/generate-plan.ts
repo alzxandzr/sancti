@@ -43,6 +43,8 @@ const summarize = (userText: string): string =>
 
 export const buildPlan = (route: RouteLabel, user_text: string, saints: SaintMatch[]): DevotionPlan => {
   const parsed = generatePlanInputSchema.parse({ route, user_text, saints });
+  const teachingAuthorityNote =
+    "This content is devotional reflection only and is not official Church teaching. For authoritative guidance, consult the Catechism, magisterial documents, or your priest/parish.";
 
   if (parsed.route === "SAFETY_REVIEW") {
     return devotionPlanSchema.parse({
@@ -52,6 +54,16 @@ export const buildPlan = (route: RouteLabel, user_text: string, saints: SaintMat
       devotion_prompts: routePromptTemplate.SAFETY_REVIEW.slice(0, 3),
       safety_note:
         "If you are in immediate danger, contact local emergency services now. You can also reach a trusted person or crisis line in your area.",
+      content_label: "devotional_reflection",
+      teaching_authority_note: teachingAuthorityNote,
+      pastoral_escalation: {
+        should_escalate: true,
+        suggestions: [
+          "Speak with a trusted priest as soon as possible for pastoral support.",
+          "Contact your local parish office and request immediate accompaniment.",
+          "If risk is immediate, contact local emergency services or a crisis hotline first.",
+        ],
+      },
       sources_used: ["internal_guardrail_policy"],
     });
   }
@@ -65,6 +77,12 @@ export const buildPlan = (route: RouteLabel, user_text: string, saints: SaintMat
     saint_matches: parsed.saints.slice(0, 3),
     devotion_prompts: prompts,
     safety_note: null,
+    content_label: "devotional_reflection",
+    teaching_authority_note: teachingAuthorityNote,
+    pastoral_escalation: {
+      should_escalate: false,
+      suggestions: [],
+    },
     sources_used: ["sancti_seed_data", "route_prompt_template"],
   });
 };

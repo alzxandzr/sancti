@@ -44,12 +44,20 @@ export const devotionPromptSchema = z.object({
   text: z.string().min(1),
 });
 
+export const pastoralEscalationSchema = z.object({
+  should_escalate: z.boolean(),
+  suggestions: z.array(z.string().min(1)).max(5),
+});
+
 export const devotionPlanSchema = z.object({
   primary_route: routeLabelSchema,
   situation_summary: z.string().min(1),
   saint_matches: z.array(saintMatchSchema).length(3),
   devotion_prompts: z.array(devotionPromptSchema).min(3).max(4),
   safety_note: z.string().nullable(),
+  content_label: z.literal("devotional_reflection"),
+  teaching_authority_note: z.string().min(1),
+  pastoral_escalation: pastoralEscalationSchema,
   sources_used: z.array(z.string().min(1)).min(1),
 });
 
@@ -58,6 +66,96 @@ export const generatePlanInputSchema = z.object({
   user_text: z.string().min(5).max(1500),
   saints: z.array(saintMatchSchema).min(1),
 });
+
+export const stateInLifeSchema = z.enum([
+  "single",
+  "dating_engaged",
+  "married",
+  "parent",
+  "religious",
+  "clergy",
+  "student",
+  "other",
+]);
+
+export const preferredToneSchema = z.enum(["gentle", "direct", "encouraging", "contemplative"]);
+
+export const prayerDurationSchema = z.union([
+  z.literal(5),
+  z.literal(10),
+  z.literal(15),
+  z.literal(20),
+  z.literal(30),
+]);
+
+export const userPreferencesSchema = z.object({
+  state_in_life: stateInLifeSchema,
+  preferred_tone: preferredToneSchema,
+  prayer_duration_minutes: prayerDurationSchema,
+});
+
+export const savedSaintSchema = z.object({
+  saint_id: z.string().min(1),
+  saved_at: z.string().datetime(),
+});
+
+export const savedPlanSchema = z.object({
+  plan_id: z.string().min(1),
+  primary_route: routeLabelSchema,
+  day_count: z.number().int().min(3).max(7),
+  completed_days: z.number().int().min(0),
+  saved_at: z.string().datetime(),
+  completed_at: z.string().datetime().nullable(),
+}).refine((value) => value.completed_days <= value.day_count, {
+  message: "completed_days cannot exceed day_count",
+  path: ["completed_days"],
+});
+
+export const progressSummarySchema = z.object({
+  total_saved_saints: z.number().int().min(0),
+  total_saved_plans: z.number().int().min(0),
+  completed_plans: z.number().int().min(0),
+  completed_plan_days: z.number().int().min(0),
+});
+
+export const userProfileSchema = z.object({
+  user_id: z.string().min(1),
+  preferences: userPreferencesSchema,
+  saved_saints: z.array(savedSaintSchema),
+  saved_plans: z.array(savedPlanSchema),
+  progress: progressSummarySchema,
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+});
+
+export const profileActionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("get_profile"),
+    user_id: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal("upsert_profile"),
+    user_id: z.string().min(1),
+    preferences: userPreferencesSchema,
+  }),
+  z.object({
+    action: z.literal("save_saint"),
+    user_id: z.string().min(1),
+    saint_id: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal("save_plan"),
+    user_id: z.string().min(1),
+    plan_id: z.string().min(1),
+    primary_route: routeLabelSchema,
+    day_count: z.number().int().min(3).max(7),
+  }),
+  z.object({
+    action: z.literal("mark_plan_day_complete"),
+    user_id: z.string().min(1),
+    plan_id: z.string().min(1),
+  }),
+]);
 
 const bannedRoleplayTerms = [
   "i am jesus",

@@ -6,7 +6,8 @@ export default function PlanScreen() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>5–7 Day Devotion Plan</Text>
       <Text style={styles.body}>Day 1: Reflection • Day 2: Journal • Day 3: Prayer • Day 4: Action</Text>
-      <Text style={styles.body}>Each prompt is devotional reflection and not official Church teaching.</Text>
+      <Text style={styles.body}>Each prompt is devotional reflection, not official Church teaching.</Text>
+      <Text style={styles.body}>For sensitive situations, seek support from a priest or your local parish.</Text>
     </SafeAreaView>
   );
 }
