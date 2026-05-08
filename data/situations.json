@@ -1,0 +1,30 @@
+[
+  {"id":"voc-01","label":"Unsure whether to marry or stay single","category":"VOCATION_DISCERNMENT","synonyms":["state in life","marriage discernment"],"emotional_tags":["uncertain","hopeful"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"voc-02","label":"Considering religious life","category":"VOCATION_DISCERNMENT","synonyms":["convent","monastic life"],"emotional_tags":["curious","peace-seeking"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"voc-03","label":"Discerning priesthood","category":"VOCATION_DISCERNMENT","synonyms":["seminary","priestly vocation"],"emotional_tags":["nervous","open"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"voc-04","label":"Trying to hear God's will in a major decision","category":"VOCATION_DISCERNMENT","synonyms":["big decision","life direction"],"emotional_tags":["anxious","prayerful"],"life_stage_tags":["adult"]},
+  {"id":"voc-05","label":"Wanting to grow in daily discernment","category":"VOCATION_DISCERNMENT","synonyms":["spiritual direction","examen"],"emotional_tags":["intentional","restless"],"life_stage_tags":["young-adult","adult"]},
+
+  {"id":"suf-01","label":"Grieving the death of a loved one","category":"SUFFERING_HARDSHIP","synonyms":["bereavement","mourning"],"emotional_tags":["grief","lonely"],"life_stage_tags":["adult","senior"]},
+  {"id":"suf-02","label":"Experiencing persistent anxiety","category":"SUFFERING_HARDSHIP","synonyms":["mental strain","worry"],"emotional_tags":["anxious","overwhelmed"],"life_stage_tags":["teen","young-adult","adult"]},
+  {"id":"suf-03","label":"Carrying chronic illness","category":"SUFFERING_HARDSHIP","synonyms":["long-term sickness","ongoing pain"],"emotional_tags":["tired","discouraged"],"life_stage_tags":["adult","senior"]},
+  {"id":"suf-04","label":"Feeling spiritually dry","category":"SUFFERING_HARDSHIP","synonyms":["desolation","prayer dryness"],"emotional_tags":["empty","distant"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"suf-05","label":"Recovering from a serious failure","category":"SUFFERING_HARDSHIP","synonyms":["setback","shame"],"emotional_tags":["ashamed","hopeless"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"suf-06","label":"Struggling with scrupulosity","category":"SUFFERING_HARDSHIP","synonyms":["religious anxiety","fear of sin"],"emotional_tags":["fearful","troubled"],"life_stage_tags":["young-adult","adult"]},
+
+  {"id":"fam-01","label":"Conflict in marriage","category":"RELATIONSHIPS_FAMILY","synonyms":["spousal tension","communication breakdown"],"emotional_tags":["hurt","frustrated"],"life_stage_tags":["adult"]},
+  {"id":"fam-02","label":"Parenting a rebellious teen","category":"RELATIONSHIPS_FAMILY","synonyms":["family tension","parenting stress"],"emotional_tags":["worried","drained"],"life_stage_tags":["adult"]},
+  {"id":"fam-03","label":"Trying to forgive a family member","category":"RELATIONSHIPS_FAMILY","synonyms":["resentment","reconciliation"],"emotional_tags":["angry","conflicted"],"life_stage_tags":["teen","young-adult","adult"]},
+  {"id":"fam-04","label":"Loneliness after relocation","category":"RELATIONSHIPS_FAMILY","synonyms":["new city","social isolation"],"emotional_tags":["lonely","uncertain"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"fam-05","label":"Caring for aging parents","category":"RELATIONSHIPS_FAMILY","synonyms":["caregiving","elder care"],"emotional_tags":["stretched","loving"],"life_stage_tags":["adult"]},
+  {"id":"fam-06","label":"Preparing for marriage","category":"RELATIONSHIPS_FAMILY","synonyms":["engagement","wedding prep"],"emotional_tags":["hopeful","nervous"],"life_stage_tags":["young-adult","adult"]},
+
+  {"id":"wrk-01","label":"Burned out at work","category":"WORK_PURPOSE","synonyms":["exhausted job","work fatigue"],"emotional_tags":["drained","resentful"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"wrk-02","label":"Trying to find meaning in my job","category":"WORK_PURPOSE","synonyms":["career purpose","vocational meaning"],"emotional_tags":["restless","searching"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"wrk-03","label":"Facing unemployment","category":"WORK_PURPOSE","synonyms":["job loss","laid off"],"emotional_tags":["afraid","insecure"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"wrk-04","label":"Starting a new role","category":"WORK_PURPOSE","synonyms":["first day","career transition"],"emotional_tags":["nervous","excited"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"wrk-05","label":"Balancing ambition and family life","category":"WORK_PURPOSE","synonyms":["work life balance","career family tension"],"emotional_tags":["torn","guilty"],"life_stage_tags":["adult"]},
+  {"id":"wrk-06","label":"Academic pressure and procrastination","category":"WORK_PURPOSE","synonyms":["study stress","school workload"],"emotional_tags":["stressed","stuck"],"life_stage_tags":["teen","young-adult"]},
+  {"id":"wrk-07","label":"Leading a difficult team","category":"WORK_PURPOSE","synonyms":["management stress","team conflict"],"emotional_tags":["pressured","responsible"],"life_stage_tags":["adult"]},
+  {"id":"wrk-08","label":"Launching a creative project","category":"WORK_PURPOSE","synonyms":["creative block","new initiative"],"emotional_tags":["inspired","fearful"],"life_stage_tags":["young-adult","adult"]}
+]

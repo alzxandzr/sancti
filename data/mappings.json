@@ -1,0 +1,29 @@
+[
+  {"saint_id":"st-joseph","route":"VOCATION_DISCERNMENT","themes":["vocation","trust","family"],"weight":95},
+  {"saint_id":"st-ignatius","route":"VOCATION_DISCERNMENT","themes":["discernment","prayer","vocation"],"weight":98},
+  {"saint_id":"st-augustine","route":"VOCATION_DISCERNMENT","themes":["conversion","truth","vocation"],"weight":87},
+  {"saint_id":"st-teresa-avila","route":"VOCATION_DISCERNMENT","themes":["prayer","perseverance","vocation"],"weight":82},
+  {"saint_id":"st-john-vianney","route":"VOCATION_DISCERNMENT","themes":["service","vocation","mercy"],"weight":80},
+  {"saint_id":"bl-carlo-acutis","route":"VOCATION_DISCERNMENT","themes":["youth","mission","vocation"],"weight":76},
+
+  {"saint_id":"st-dymphna","route":"SUFFERING_HARDSHIP","themes":["healing","hope","anxiety"],"weight":98},
+  {"saint_id":"st-faustina","route":"SUFFERING_HARDSHIP","themes":["mercy","trust","healing"],"weight":94},
+  {"saint_id":"st-padre-pio","route":"SUFFERING_HARDSHIP","themes":["suffering","prayer","hope"],"weight":93},
+  {"saint_id":"st-therese","route":"SUFFERING_HARDSHIP","themes":["trust","little-way","daily-faithfulness"],"weight":90},
+  {"saint_id":"st-maximilian-kolbe","route":"SUFFERING_HARDSHIP","themes":["charity","sacrifice","hope"],"weight":88},
+  {"saint_id":"st-teresa-avila","route":"SUFFERING_HARDSHIP","themes":["perseverance","prayer","fortitude"],"weight":83},
+
+  {"saint_id":"st-monica","route":"RELATIONSHIPS_FAMILY","themes":["family","intercession","hope"],"weight":98},
+  {"saint_id":"st-joseph","route":"RELATIONSHIPS_FAMILY","themes":["family","protection","trust"],"weight":96},
+  {"saint_id":"st-gianna-molla","route":"RELATIONSHIPS_FAMILY","themes":["family","sacrifice","charity"],"weight":95},
+  {"saint_id":"st-elizabeth-ann-seton","route":"RELATIONSHIPS_FAMILY","themes":["family","education","resilience"],"weight":90},
+  {"saint_id":"st-john-paul-ii","route":"RELATIONSHIPS_FAMILY","themes":["family","hope","dignity"],"weight":85},
+  {"saint_id":"st-maximilian-kolbe","route":"RELATIONSHIPS_FAMILY","themes":["family","charity","self-gift"],"weight":80},
+
+  {"saint_id":"st-joseph","route":"WORK_PURPOSE","themes":["work","integrity","diligence"],"weight":97},
+  {"saint_id":"st-benedict","route":"WORK_PURPOSE","themes":["work","discipline","community"],"weight":96},
+  {"saint_id":"st-thomas-aquinas","route":"WORK_PURPOSE","themes":["study","wisdom","clarity"],"weight":93},
+  {"saint_id":"st-francis","route":"WORK_PURPOSE","themes":["purpose","simplicity","charity"],"weight":88},
+  {"saint_id":"st-cecilia","route":"WORK_PURPOSE","themes":["creativity","witness","joy"],"weight":82},
+  {"saint_id":"bl-carlo-acutis","route":"WORK_PURPOSE","themes":["technology","mission","youth"],"weight":79}
+]
