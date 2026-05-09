@@ -157,6 +157,45 @@ export const profileActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
+export const customPlanSetupSchema = z.object({
+  title: z.string().min(3).max(80),
+  saint_id: z.string().min(1),
+  route: routeLabelSchema,
+  themes: z.array(z.string().min(1)).min(1).max(5),
+  duration_days: z.union([z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]),
+  preferred_tone: preferredToneSchema,
+  prayer_duration_minutes: prayerDurationSchema,
+});
+
+export const customPlanDaySchema = z.object({
+  day_number: z.number().int().min(1).max(7),
+  prompt_type: z.enum(["reflection", "journal", "prayer", "action"]),
+  title: z.string().min(1).max(100),
+  text: z.string().min(10).max(1000),
+  edited_by_user: z.boolean(),
+});
+
+export const customPlanDraftSchema = z.object({
+  draft_id: z.string().min(1),
+  user_id: z.string().min(1),
+  setup: customPlanSetupSchema,
+  days: z.array(customPlanDaySchema).min(3).max(7),
+  status: z.enum(["in_progress", "ready_to_publish"]),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+});
+
+export const customPlanPublishedSchema = z.object({
+  plan_id: z.string().min(1),
+  user_id: z.string().min(1),
+  setup: customPlanSetupSchema,
+  days: z.array(customPlanDaySchema).min(3).max(7),
+  content_label: z.literal("devotional_reflection"),
+  teaching_authority_note: z.string().min(1),
+  pastoral_escalation: pastoralEscalationSchema,
+  created_at: z.string().datetime(),
+});
+
 const bannedRoleplayTerms = [
   "i am jesus",
   "i absolve you",

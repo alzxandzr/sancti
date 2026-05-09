@@ -123,3 +123,45 @@ export interface MatchWeight {
   themes: string[];
   weight: number;
 }
+
+export interface CustomPlanSetup {
+  title: string;
+  saint_id: string;
+  route: RouteLabel;
+  themes: string[];
+  duration_days: 3 | 4 | 5 | 6 | 7;
+  preferred_tone: PreferredTone;
+  prayer_duration_minutes: PrayerDuration;
+}
+
+export interface CustomPlanDay {
+  day_number: number;
+  prompt_type: "reflection" | "journal" | "prayer" | "action";
+  title: string;
+  text: string;
+  edited_by_user: boolean;
+}
+
+export interface CustomPlanDraft {
+  draft_id: string;
+  user_id: string;
+  setup: CustomPlanSetup;
+  days: CustomPlanDay[];
+  status: "in_progress" | "ready_to_publish";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomPlanPublished {
+  plan_id: string;
+  user_id: string;
+  setup: CustomPlanSetup;
+  days: CustomPlanDay[];
+  content_label: "devotional_reflection";
+  teaching_authority_note: string;
+  pastoral_escalation: {
+    should_escalate: boolean;
+    suggestions: string[];
+  };
+  created_at: string;
+}
