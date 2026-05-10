@@ -149,6 +149,8 @@ export const profileActionSchema = z.discriminatedUnion("action", [
     plan_id: z.string().min(1),
     primary_route: routeLabelSchema,
     day_count: z.number().int().min(3).max(7),
+    saint_ids: z.array(z.string().min(1)).min(1).max(10),
+    classification: classifierResultSchema,
   }),
   z.object({
     action: z.literal("mark_plan_day_complete"),

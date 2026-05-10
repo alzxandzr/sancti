@@ -1,20 +1,47 @@
-export interface SupabaseConfig {
-  url: string;
-  anonKey: string;
-}
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { loadPublicEnv, loadServerEnv } from "./env";
 
-export const getSupabaseConfig = (): SupabaseConfig => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+// Two clients, two trust levels.
+//
+//   Service-role: server-side only. Bypasses RLS. Used by API routes to write
+//     audit logs and to operate across users (e.g. for cron jobs). Never ship
+//     this key in the mobile bundle.
+//
+//   Public/anon: safe to bundle in the Expo app. Subject to RLS. Used for
+//     auth and for the user-scoped reads/writes a signed-in client performs
+//     directly against Postgres.
 
-  if (!url || !anonKey) {
-    throw new Error("Supabase environment variables are missing.");
-  }
+let cachedServiceClient: SupabaseClient | null = null;
+let cachedPublicClient: SupabaseClient | null = null;
+let serviceClientOverride: SupabaseClient | null = null;
 
-  return { url, anonKey };
+export const getServiceSupabaseClient = (): SupabaseClient => {
+  if (serviceClientOverride) return serviceClientOverride;
+  if (cachedServiceClient) return cachedServiceClient;
+
+  const env = loadServerEnv();
+  cachedServiceClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return cachedServiceClient;
 };
 
-export const table = (name: string) => ({
-  name,
-  config: getSupabaseConfig(),
-});
+export const getPublicSupabaseClient = (): SupabaseClient => {
+  if (cachedPublicClient) return cachedPublicClient;
+
+  const env = loadPublicEnv();
+  cachedPublicClient = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+  return cachedPublicClient;
+};
+
+// Test hook: inject a stub client. Pass null to clear.
+export const __setServiceSupabaseClientForTest = (client: SupabaseClient | null): void => {
+  serviceClientOverride = client;
+  cachedServiceClient = null;
+};
+
+export const __resetSupabaseCacheForTest = (): void => {
+  cachedServiceClient = null;
+  cachedPublicClient = null;
+  serviceClientOverride = null;
+};
