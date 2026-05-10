@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Typecheck + Test
+    name: Typecheck + Mocked Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -30,8 +30,46 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Tests
+      - name: Tests (mocked Anthropic)
         run: npm test
 
-      - name: Lint (non-blocking until Phase 0 installs ESLint)
+      - name: Lint (non-blocking until ESLint deps installed)
         run: npm run lint --if-present || true
+
+  live-smoke:
+    name: Live LLM Smoke (main only)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip when secret is absent
+        id: gate
+        run: |
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "ANTHROPIC_API_KEY not set; skipping live smoke."
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node.js
+        if: steps.gate.outputs.should_run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.gate.outputs.should_run == 'true'
+        run: npm ci
+
+      - name: Run live smoke (5 fixtures)
+        if: steps.gate.outputs.should_run == 'true'
+        run: npx tsx scripts/llm-smoke.ts

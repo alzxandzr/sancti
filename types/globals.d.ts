@@ -1,3 +1,7 @@
+// Mobile-side any-shims kept until the mobile slice lands and replaces them
+// with real react-native + expo-router types. Server-side typing now uses
+// @types/node + the real @anthropic-ai/sdk types.
+
 declare module "react" {
   const React: any;
   export default React;
@@ -18,10 +22,6 @@ declare module "expo-router" {
   export const Link: any;
   export const useLocalSearchParams: any;
 }
-
-declare const process: {
-  env: Record<string, string | undefined>;
-};
 
 declare namespace JSX {
   interface Element {}
