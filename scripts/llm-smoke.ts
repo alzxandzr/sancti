@@ -4,14 +4,20 @@
 // Skipped automatically in CI when the secret is absent.
 //
 // Reports per-fixture: route, total_days, prompts, citations, latency,
-// token usage, and an estimated cost in USD using rough current public pricing.
-// Confirm pricing at https://anthropic.com/pricing — these constants are
-// illustrative; the cost number is for budgeting, not billing.
+// observed cost in USD, and whether the safety path short-circuited (no
+// LLM call). Cost uses rough current public pricing — confirm at
+// https://anthropic.com/pricing before quoting numbers externally.
 
 import { classifyInput } from "../api/classify";
 import { matchSaints } from "../api/match-saints";
 import { buildPlan } from "../api/generate-plan";
-import { getModels } from "../lib/anthropic";
+import {
+  addUsageObserver,
+  getModels,
+  removeUsageObserver,
+  type LLMUsage,
+  type UsageObservation,
+} from "../lib/anthropic";
 
 interface Fixture {
   label: string;
@@ -50,18 +56,11 @@ const FIXTURES: Fixture[] = [
 // https://anthropic.com/pricing before quoting numbers externally.
 const PRICING: Record<string, { input: number; cached_read: number; cached_write: number; output: number }> = {
   "claude-haiku-4-5": { input: 1, cached_read: 0.1, cached_write: 1.25, output: 5 },
+  "claude-haiku-4-5-20251001": { input: 1, cached_read: 0.1, cached_write: 1.25, output: 5 },
   "claude-sonnet-4-6": { input: 3, cached_read: 0.3, cached_write: 3.75, output: 15 },
-  // Test fakes, never hit in production. Zero out so live smoke catches a real model.
-  "test-haiku": { input: 0, cached_read: 0, cached_write: 0, output: 0 },
-  "test-sonnet": { input: 0, cached_read: 0, cached_write: 0, output: 0 },
 };
 
-const cost = (model: string, usage: {
-  input_tokens: number;
-  output_tokens: number;
-  cache_read_input_tokens: number;
-  cache_creation_input_tokens: number;
-}): number => {
+const cost = (model: string, usage: LLMUsage): number => {
   const p = PRICING[model] ?? { input: 3, cached_read: 0.3, cached_write: 3.75, output: 15 };
   return (
     (usage.input_tokens * p.input +
@@ -70,6 +69,20 @@ const cost = (model: string, usage: {
       usage.output_tokens * p.output) /
     1_000_000
   );
+};
+
+const addUsage = (a: LLMUsage, b: LLMUsage): LLMUsage => ({
+  input_tokens: a.input_tokens + b.input_tokens,
+  output_tokens: a.output_tokens + b.output_tokens,
+  cache_read_input_tokens: a.cache_read_input_tokens + b.cache_read_input_tokens,
+  cache_creation_input_tokens: a.cache_creation_input_tokens + b.cache_creation_input_tokens,
+});
+
+const ZERO_USAGE: LLMUsage = {
+  input_tokens: 0,
+  output_tokens: 0,
+  cache_read_input_tokens: 0,
+  cache_creation_input_tokens: 0,
 };
 
 const main = async (): Promise<void> => {
@@ -82,28 +95,75 @@ const main = async (): Promise<void> => {
   console.log("Models:", JSON.stringify(models));
   console.log(`Running ${FIXTURES.length} fixtures...\n`);
 
+  const usageByModel = new Map<string, LLMUsage>();
+  let fixtureUsage: LLMUsage = { ...ZERO_USAGE };
+  let fixtureCallCount = 0;
+
+  const observer = (obs: UsageObservation): void => {
+    fixtureCallCount += 1;
+    fixtureUsage = addUsage(fixtureUsage, obs.usage);
+    const prev = usageByModel.get(obs.model) ?? { ...ZERO_USAGE };
+    usageByModel.set(obs.model, addUsage(prev, obs.usage));
+  };
+  addUsageObserver(observer);
+
   let total = 0;
 
-  for (const fx of FIXTURES) {
-    const t0 = Date.now();
-    const classified = await classifyInput(fx.user_text);
-    const matched = await matchSaints(classified.classification.primary_route, classified.classification.themes);
-    const plan = await buildPlan(classified.classification.primary_route, fx.user_text, matched, {
-      locale: "en-US",
-    });
-    const latency = Date.now() - t0;
-    const promptCount = plan.days.reduce((n, d) => n + d.prompts.length, 0);
-    const citationCount = plan.days.reduce(
-      (n, d) => n + d.prompts.reduce((m, p) => m + p.citations.length, 0),
-      0,
-    );
+  try {
+    for (const fx of FIXTURES) {
+      fixtureUsage = { ...ZERO_USAGE };
+      fixtureCallCount = 0;
+      const t0 = Date.now();
+      const classified = await classifyInput(fx.user_text);
+      const matched = await matchSaints(
+        classified.classification.primary_route,
+        classified.classification.themes,
+      );
+      const plan = await buildPlan(classified.classification.primary_route, fx.user_text, matched, {
+        locale: "en-US",
+      });
+      const latency = Date.now() - t0;
+      const promptCount = plan.days.reduce((n, d) => n + d.prompts.length, 0);
+      const citationCount = plan.days.reduce(
+        (n, d) => n + d.prompts.reduce((m, p) => m + p.citations.length, 0),
+        0,
+      );
 
-    console.log(`[${fx.label}] route=${plan.primary_route} days=${plan.total_days} prompts=${promptCount} citations=${citationCount} latency=${latency}ms`);
-    console.log(`  short_circuited=${classified.short_circuited} used_fallback=${classified.used_fallback} safety=${classified.safety.severity}`);
+      // Cost for this fixture: re-price the cumulative usage at the dominant
+      // model. For mixed-model fixtures (classify+safety on Haiku, plan on
+      // Sonnet), this slight overestimate is acceptable for budgeting.
+      // The per-model breakdown at the end gives the exact picture.
+      const fixtureCost = cost(plan.primary_route === "SAFETY_REVIEW" ? models.safety : models.plan, fixtureUsage);
+      total += fixtureCost;
+
+      const note = classified.short_circuited ? " [no LLM call]" : "";
+      console.log(
+        `[${fx.label}] route=${plan.primary_route} days=${plan.total_days} prompts=${promptCount} citations=${citationCount} latency=${latency}ms calls=${fixtureCallCount} cost=$${fixtureCost.toFixed(4)}${note}`,
+      );
+      console.log(
+        `  short_circuited=${classified.short_circuited} used_fallback=${classified.used_fallback} safety=${classified.safety.severity} usage=${JSON.stringify(fixtureUsage)}`,
+      );
+    }
+  } finally {
+    removeUsageObserver(observer);
   }
 
-  console.log(`\nTotal estimated cost (illustrative): $${total.toFixed(4)}`);
-  console.log(`Note: per-call usage is logged via lib/logger as 'llm_call' / 'llm_call_failed' lines; pipe stdout to a file to compute exact cost from logs.`);
+  console.log(`\nPer-model breakdown:`);
+  let exactTotal = 0;
+  for (const [model, usage] of usageByModel) {
+    const c = cost(model, usage);
+    exactTotal += c;
+    const cacheReadRatio =
+      usage.input_tokens + usage.cache_read_input_tokens > 0
+        ? usage.cache_read_input_tokens / (usage.input_tokens + usage.cache_read_input_tokens)
+        : 0;
+    console.log(
+      `  ${model}: input=${usage.input_tokens} cache_read=${usage.cache_read_input_tokens} cache_write=${usage.cache_creation_input_tokens} output=${usage.output_tokens} cost=$${c.toFixed(4)} cache_read_ratio=${cacheReadRatio.toFixed(2)}`,
+    );
+  }
+  console.log(`\nTotal estimated cost (exact, by model): $${exactTotal.toFixed(4)}`);
+  console.log(`Total estimated cost (rough per-fixture): $${total.toFixed(4)}`);
+  console.log(`Note: per-call usage is logged via lib/logger as 'llm_call' lines for further analysis.`);
 };
 
 main().catch((err) => {

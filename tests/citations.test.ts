@@ -123,6 +123,63 @@ test("assertAllCitationsValid validates each entry", () => {
   assert.equal(out.length, 2);
 });
 
+test("validateCitation with allowedSaintIds rejects saints outside the per-call set", () => {
+  const allowed = new Set(["st-ignatius"]);
+
+  // In-set: passes.
+  const ok = validateCitation(
+    {
+      kind: "saint_writing",
+      saint_id: "st-ignatius",
+      title: "Spiritual Exercises",
+      label: "Suscipe",
+    },
+    { allowedSaintIds: allowed },
+  );
+  assert.equal(ok.kind, "saint_writing");
+
+  // Exists in the global corpus but not in the per-call set: rejected.
+  assert.throws(
+    () =>
+      validateCitation(
+        {
+          kind: "saint_writing",
+          saint_id: "st-therese",
+          title: "Story of a Soul",
+          label: "Little way",
+        },
+        { allowedSaintIds: allowed },
+      ),
+    (e: unknown) => e instanceof CitationRejectedError && e.reason === "saint-not-in-allowlist",
+  );
+});
+
+test("assertAllCitationsValid forwards allowedSaintIds to each item", () => {
+  const allowed = new Set(["st-ignatius"]);
+  assert.throws(
+    () =>
+      assertAllCitationsValid(
+        [
+          {
+            kind: "scripture",
+            book: "Psalms",
+            chapter: 23,
+            verse: "1-6",
+            label: "Shepherd",
+          },
+          {
+            kind: "saint_writing",
+            saint_id: "st-therese",
+            title: "Story of a Soul",
+            label: "Little way",
+          },
+        ],
+        { allowedSaintIds: allowed },
+      ),
+    (e: unknown) => e instanceof CitationRejectedError && e.reason === "saint-not-in-allowlist",
+  );
+});
+
 test("formatCitation produces human-readable strings", () => {
   assert.equal(formatCitation({ kind: "catechism", paragraph: 1700, label: "x" }), "CCC §1700");
   assert.equal(

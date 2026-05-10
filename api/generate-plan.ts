@@ -44,13 +44,21 @@ const allSaints = saintsData as Saint[];
 
 // ─── Citation allowlist block (per-call, derived from chosen saints) ─────
 
+// Resolves a SaintMatch.name to the saint_id used in citations. Falls back to
+// a slugified form when the name is not in the corpus (e.g., a hand-injected
+// match in the SAFETY_REVIEW fallback path); the LLM and the allowlist set
+// must agree on this string for both narrative and validation to align.
+const resolveSaintId = (match: SaintMatch): string => {
+  const full = allSaints.find((s) => s.name === match.name);
+  return full ? full.id : match.name.toLowerCase().replace(/[^a-z]+/g, "-");
+};
+
+const buildAllowedSaintIdSet = (saints: ReadonlyArray<SaintMatch>): ReadonlySet<string> =>
+  new Set(saints.map(resolveSaintId));
+
 const buildAllowlistBlock = (saints: ReadonlyArray<SaintMatch>): string => {
   const saintEntries = saints
-    .map((m) => {
-      const full = allSaints.find((s) => s.name === m.name);
-      const id = full ? full.id : m.name.toLowerCase().replace(/[^a-z]+/g, "-");
-      return `  - saint_id: "${id}", name: "${m.name}", feast_day: "${m.feast_day}"`;
-    })
+    .map((m) => `  - saint_id: "${resolveSaintId(m)}", name: "${m.name}", feast_day: "${m.feast_day}"`)
     .join("\n");
 
   return `ALLOWED CITATIONS for this plan (use ONLY these):
@@ -118,16 +126,7 @@ const buildSafetyReviewPlan = (
   return devotionPlanV2Schema.parse({
     primary_route: "SAFETY_REVIEW" as const,
     situation_summary: summary,
-    saint_matches: saints.slice(0, 3).length > 0 ? saints.slice(0, 3) : [
-      // Schema requires ≥1 saint_match; provide a generic one if upstream sent none.
-      {
-        name: "St. Michael the Archangel",
-        reason: "Invoked for spiritual protection in moments of grave danger.",
-        themes: ["protection", "fortitude"],
-        feast_day: "September 29",
-        prayer_reference: "Pray the St. Michael Prayer for protection.",
-      },
-    ],
+    saint_matches: saints.slice(0, 3),
     total_days: 5,
     days: [day, ...buildPlaceholderDays(day, 5)],
     safety_note:
@@ -218,6 +217,7 @@ export const buildPlan = async (
   // ephemeral-cacheable since saint sets repeat across users for popular
   // routes; base + route are also stable so caching cumulatively is fine.
   const allowlist = buildAllowlistBlock(parsed.saints);
+  const allowedSaintIds = buildAllowedSaintIdSet(parsed.saints);
   const liturgicalBlock = liturgical
     ? `Today is ${liturgical.date}: ${liturgical.celebration} (${liturgical.rank}). If a celebrated saint is in the saints list above, weave one brief reference to them.`
     : "Liturgical context unavailable for today; proceed without a liturgical reference.";
@@ -278,7 +278,9 @@ export const buildPlan = async (
   }
 
   try {
-    assertAllCitationsValid(plan.days.flatMap((d) => d.prompts).flatMap((p) => p.citations));
+    assertAllCitationsValid(plan.days.flatMap((d) => d.prompts).flatMap((p) => p.citations), {
+      allowedSaintIds,
+    });
   } catch (err) {
     if (err instanceof CitationRejectedError) {
       recordSafetyEvent({

@@ -39,13 +39,6 @@ export const __setAnthropicForTest = (
   cachedModels = models ?? null;
 };
 
-// Legacy export retained so any caller still importing it compiles. Prefer
-// `getAnthropicClient()` + the typed helpers below.
-export const getAnthropicClientConfig = (): { apiKey: string; model: string } => {
-  const env = loadServerEnv();
-  return { apiKey: env.ANTHROPIC_API_KEY, model: env.ANTHROPIC_MODEL_PLAN };
-};
-
 // ─── Usage tracking ──────────────────────────────────────────────────────
 
 export interface LLMUsage {
@@ -80,6 +73,41 @@ const usageFrom = (u: {
   cache_read_input_tokens: u.cache_read_input_tokens ?? 0,
   cache_creation_input_tokens: u.cache_creation_input_tokens ?? 0,
 });
+
+// ─── Usage observer (out-of-band cost tracking) ──────────────────────────
+// Production code never subscribes; the live smoke script subscribes once,
+// accumulates by model, and prints a cost summary. Subscribers receive the
+// CUMULATIVE usage for a single callJSON call (already aggregated across
+// any internal retries).
+
+export interface UsageObservation {
+  purpose: string;
+  model: string;
+  usage: LLMUsage;
+  latency_ms: number;
+  retries_used: number;
+}
+
+type UsageObserver = (obs: UsageObservation) => void;
+const usageObservers = new Set<UsageObserver>();
+
+export const addUsageObserver = (fn: UsageObserver): void => {
+  usageObservers.add(fn);
+};
+
+export const removeUsageObserver = (fn: UsageObserver): void => {
+  usageObservers.delete(fn);
+};
+
+const notifyUsageObservers = (obs: UsageObservation): void => {
+  for (const fn of usageObservers) {
+    try {
+      fn(obs);
+    } catch {
+      // Observers must never break the pipeline.
+    }
+  }
+};
 
 // ─── JSON extraction (lenient against light prose wrapping) ──────────────
 
@@ -240,6 +268,14 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
       user_id: opts.userId ?? null,
     });
 
+    notifyUsageObservers({
+      purpose: opts.purpose,
+      model: opts.model,
+      usage: cumulativeUsage,
+      latency_ms,
+      retries_used: attempt,
+    });
+
     return {
       data: validated.data,
       usage: cumulativeUsage,
@@ -259,19 +295,4 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
     usage: cumulativeUsage,
   });
   throw new Error(`LLM call failed after ${retries} retries: ${lastError}`);
-};
-
-// Legacy text-output helper. New code should use callJSON.
-export const generateDevotionalText = async (prompt: string): Promise<string> => {
-  if (!prompt.trim()) throw new Error("Prompt is required.");
-  const client = getAnthropicClient();
-  const response = await client.messages.create({
-    model: getModels().plan,
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  });
-  const textBlock = response.content.find(
-    (b): b is Extract<typeof b, { type: "text" }> => b.type === "text",
-  );
-  return textBlock?.text ?? "";
 };

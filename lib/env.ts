@@ -3,8 +3,8 @@ import { z } from "zod";
 // Server-side env: never bundle into the mobile binary.
 const serverEnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(20),
-  ANTHROPIC_MODEL_CLASSIFY: z.string().default("claude-haiku-4-5"),
-  ANTHROPIC_MODEL_SAFETY: z.string().default("claude-haiku-4-5"),
+  ANTHROPIC_MODEL_CLASSIFY: z.string().default("claude-haiku-4-5-20251001"),
+  ANTHROPIC_MODEL_SAFETY: z.string().default("claude-haiku-4-5-20251001"),
   ANTHROPIC_MODEL_PLAN: z.string().default("claude-sonnet-4-6"),
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),

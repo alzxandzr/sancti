@@ -167,6 +167,12 @@ const bannedRoleplayTerms = [
   "ego te absolvo",
   "this confession is valid",
   "your sins are forgiven",
+  // Romance-language equivalents (lexical only — paraphrase coverage is
+  // a Phase-5 hardening task; semantic detection lives in the prompt).
+  "je t'absous",
+  "je t’absous",
+  "te absuelvo",
+  "ti assolvo",
   // Priest / spiritual director impersonation
   "as your priest",
   "as your confessor",
@@ -287,6 +293,13 @@ const PROMPT_INJECTION_PATTERNS: ReadonlyArray<RegExp> = [
   new RegExp("<\\|[a-z_]{1,40}\\|>", "gi"),
   // ASCII control chars except \\n (0x0a), \\r (0x0d), \\t (0x09).
   new RegExp("[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f]", "g"),
+  // Bidirectional and zero-width control characters. These can visually
+  // reverse / hide a `</user_text>` breakout against the surrounding wrap.
+  // Covers ZWSP/ZWNJ/ZWJ (U+200B–U+200D), bidi embeddings/overrides
+  // (U+202A–U+202E), Arabic letter mark (U+061C), Mongolian vowel separator
+  // (U+180E), BOM/ZWNBSP (U+FEFF), and the LRI/RLI/FSI/PDI block
+  // (U+2066–U+2069).
+  /[​-‍‪-‮؜᠎﻿⁦-⁩]/g,
 ];
 
 export const sanitizeUserText = (raw: string): string => {

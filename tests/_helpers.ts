@@ -13,8 +13,6 @@ export interface FakeMessage {
     cache_read_input_tokens?: number;
     cache_creation_input_tokens?: number;
   };
-  /** Test-only: capture the params the SUT passed to messages.create(). */
-  __seenParams?: unknown;
 }
 
 export type FakeResponder = (params: unknown, callIndex: number) => FakeMessage;

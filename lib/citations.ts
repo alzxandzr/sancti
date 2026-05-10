@@ -23,7 +23,20 @@ export class CitationRejectedError extends Error {
 
 const verseShape = new RegExp("^[0-9]{1,3}(?:[a-c])?(?:[–-][0-9]{1,3}(?:[a-c])?)?(?:,\\s?[0-9]{1,3}(?:[a-c])?(?:[–-][0-9]{1,3}(?:[a-c])?)?)*$");
 
-export const validateCitation = (input: unknown): Citation => {
+export interface CitationValidationOptions {
+  /**
+   * When provided, `saint_writing` citations whose `saint_id` is not in this
+   * set are rejected as `saint-not-in-allowlist`. Use this in plan generation
+   * to enforce that the LLM only cites the saints chosen for the current
+   * plan, not just any saint in the global corpus.
+   */
+  allowedSaintIds?: ReadonlySet<string>;
+}
+
+export const validateCitation = (
+  input: unknown,
+  opts: CitationValidationOptions = {},
+): Citation => {
   const parsed = citationSchema.safeParse(input);
   if (!parsed.success) {
     throw new CitationRejectedError(
@@ -61,6 +74,13 @@ export const validateCitation = (input: unknown): Citation => {
           "unknown-saint",
         );
       }
+      if (opts.allowedSaintIds && !opts.allowedSaintIds.has(c.saint_id)) {
+        throw new CitationRejectedError(
+          `Saint writing citation references "${c.saint_id}", which exists in the corpus but was not selected for this plan.`,
+          c,
+          "saint-not-in-allowlist",
+        );
+      }
       return c;
     case "liturgy":
       // Enum already enforced by schema.
@@ -68,7 +88,10 @@ export const validateCitation = (input: unknown): Citation => {
   }
 };
 
-export const assertAllCitationsValid = (citations: ReadonlyArray<unknown>): Citation[] => {
+export const assertAllCitationsValid = (
+  citations: ReadonlyArray<unknown>,
+  opts: CitationValidationOptions = {},
+): Citation[] => {
   if (citations.length === 0) {
     throw new CitationRejectedError(
       "At least one citation is required for every devotional prompt.",
@@ -76,7 +99,7 @@ export const assertAllCitationsValid = (citations: ReadonlyArray<unknown>): Cita
       "missing",
     );
   }
-  return citations.map(validateCitation);
+  return citations.map((c) => validateCitation(c, opts));
 };
 
 export const formatCitation = (c: Citation): string => {

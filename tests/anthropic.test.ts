@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { z } from "zod";
-import { callJSON } from "../lib/anthropic";
+import {
+  addUsageObserver,
+  callJSON,
+  removeUsageObserver,
+  type UsageObservation,
+} from "../lib/anthropic";
 import { installFakeAnthropic, okJsonResponse, rawTextResponse, resetFakeAnthropic } from "./_helpers";
 
 const sampleSchema = z.object({
@@ -118,6 +123,63 @@ test("callJSON aggregates token usage across retries", async (t) => {
   // Both calls return 100 input + 50 output in the helper.
   assert.equal(result.usage.input_tokens, 200);
   assert.equal(result.usage.output_tokens, 100);
+});
+
+test("addUsageObserver fires once per successful callJSON with cumulative usage across retries", async (t) => {
+  installFakeAnthropic((_p, i) => {
+    if (i === 0) return rawTextResponse("garbage");
+    return okJsonResponse({ primary_route: "A", confidence: 0.9 });
+  });
+  const observations: UsageObservation[] = [];
+  const observer = (obs: UsageObservation): void => {
+    observations.push(obs);
+  };
+  addUsageObserver(observer);
+  t.after(() => {
+    removeUsageObserver(observer);
+    resetFakeAnthropic();
+  });
+
+  await callJSON({
+    model: "test-haiku",
+    systemBlocks: ["sys"],
+    user: "test",
+    schema: sampleSchema,
+    retries: 2,
+    purpose: "observer-test",
+  });
+
+  assert.equal(observations.length, 1, "observer fires exactly once on success");
+  // Two underlying SDK calls × 100/50 each.
+  assert.equal(observations[0].usage.input_tokens, 200);
+  assert.equal(observations[0].usage.output_tokens, 100);
+  assert.equal(observations[0].purpose, "observer-test");
+  assert.equal(observations[0].retries_used, 1);
+});
+
+test("usage observer does NOT fire when callJSON exhausts retries", async (t) => {
+  installFakeAnthropic(() => rawTextResponse("garbage every time"));
+  const observations: UsageObservation[] = [];
+  const observer = (obs: UsageObservation): void => {
+    observations.push(obs);
+  };
+  addUsageObserver(observer);
+  t.after(() => {
+    removeUsageObserver(observer);
+    resetFakeAnthropic();
+  });
+
+  await assert.rejects(
+    callJSON({
+      model: "test-haiku",
+      systemBlocks: ["sys"],
+      user: "test",
+      schema: sampleSchema,
+      retries: 1,
+      purpose: "observer-fail-test",
+    }),
+  );
+  assert.equal(observations.length, 0, "observer does not fire on failure");
 });
 
 test("callJSON accepts code-fenced JSON output (LLM occasionally wraps)", async (t) => {

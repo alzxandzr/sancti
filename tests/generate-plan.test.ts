@@ -155,6 +155,29 @@ test("plan with fabricated catechism citation falls back", async (t) => {
   assert.equal(plan.sources_used[0], "psalm_23_fallback");
 });
 
+test("plan with citation referencing a global-corpus saint NOT in the per-call set falls back", async (t) => {
+  // sampleSaints has Ignatius + Thérèse. Inject a citation for st-francis-of-assisi
+  // (real saint in the corpus, but NOT chosen for this plan).
+  const tainted = validPlan();
+  tainted.days[0].prompts[1].citations = [
+    {
+      kind: "saint_writing",
+      saint_id: "st-francis",
+      title: "Canticle of the Sun",
+      label: "real saint, but not in this plan",
+    },
+  ];
+  installFakeAnthropic(() => okJsonResponse(tainted));
+  t.after(resetFakeAnthropic);
+
+  const plan = await buildPlan(
+    "VOCATION_DISCERNMENT",
+    "Trying to decide on a vocation.",
+    sampleSaints,
+  );
+  assert.equal(plan.sources_used[0], "psalm_23_fallback");
+});
+
 test("plan with unknown saint_writing citation falls back", async (t) => {
   const tainted = validPlan();
   tainted.days[0].prompts[1].citations = [
