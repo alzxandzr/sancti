@@ -258,5 +258,260 @@
     "keywords": ["technology", "youth", "eucharist"],
     "themes": ["vocation", "work", "youth"],
     "source_links": ["https://www.catholicnewsagency.com", "https://www.vatican.va"]
+  },
+  {
+    "id": "st-rita",
+    "name": "St. Rita of Cascia",
+    "title": "Augustinian Nun",
+    "feast_day": "May 22",
+    "era": "14th-15th century",
+    "short_bio": "St. Rita endured a difficult marriage and the loss of her husband and sons before entering religious life. She is venerated as patroness of impossible causes, abused wives, and those carrying long-suffering grief.",
+    "patronages": ["impossible causes", "abused wives", "widows", "grief"],
+    "virtues": ["forgiveness", "perseverance", "fortitude"],
+    "keywords": ["grief", "marriage", "loss", "forgiveness"],
+    "themes": ["family", "suffering", "forgiveness", "hope"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/2004/ns_lit_doc_20040523_rita-cascia_en.html",
+      "https://www.augustiniancanons.org/st-rita-of-cascia/",
+      "https://www.britannica.com/biography/Saint-Rita-of-Cascia"
+    ]
+  },
+  {
+    "id": "st-matt-talbot",
+    "name": "Ven. Matt Talbot",
+    "title": "Layman, Servant of God",
+    "feast_day": "June 19",
+    "era": "19th-20th century",
+    "short_bio": "An Irish dockworker who recovered from severe alcoholism through prayer, penance, and the sacraments. His witness is widely invoked by those struggling with addiction and recovery.",
+    "patronages": ["alcoholics", "people in recovery"],
+    "virtues": ["humility", "perseverance", "penance"],
+    "keywords": ["addiction", "recovery", "sobriety", "ordinary holiness"],
+    "themes": ["suffering", "recovery", "perseverance", "vocation"],
+    "source_links": [
+      "https://www.matttalbotresources.com/",
+      "https://www.catholicnewsagency.com/saint/venerable-matt-talbot-510",
+      "https://www.britannica.com/biography/Matt-Talbot"
+    ]
+  },
+  {
+    "id": "sts-louis-zelie-martin",
+    "name": "Sts. Louis & Zélie Martin",
+    "title": "Married Couple, Parents of St. Thérèse",
+    "feast_day": "July 12",
+    "era": "19th century",
+    "short_bio": "The first married couple canonized together. They lived ordinary professional and family life with extraordinary fidelity, raising five daughters who entered religious life including St. Thérèse of Lisieux.",
+    "patronages": ["married couples", "parents", "grieving parents"],
+    "virtues": ["fidelity", "fortitude", "ordinary holiness"],
+    "keywords": ["marriage", "parenting", "family", "daily holiness"],
+    "themes": ["family", "vocation", "work", "trust"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/2015/ns_lit_doc_20151018_louis-zelie-martin_en.html",
+      "https://www.catholicnewsagency.com/saint/sts-louis-and-zelie-martin-741",
+      "https://www.usccb.org/prayer-and-worship/saints"
+    ]
+  },
+  {
+    "id": "st-anne",
+    "name": "St. Anne",
+    "title": "Mother of the Blessed Virgin Mary",
+    "feast_day": "July 26",
+    "era": "1st century BC",
+    "short_bio": "Honored in tradition as the mother of Mary and grandmother of Jesus. She is invoked by mothers, grandmothers, and those longing for children.",
+    "patronages": ["mothers", "grandmothers", "childless couples", "women in labor"],
+    "virtues": ["patience", "hope", "faithfulness"],
+    "keywords": ["motherhood", "grandmother", "fertility", "hidden faithfulness"],
+    "themes": ["family", "trust", "patience"],
+    "source_links": [
+      "https://www.newadvent.org/cathen/01538a.htm",
+      "https://www.catholic.org/saints/saint.php?saint_id=43",
+      "https://www.britannica.com/topic/Saint-Anne"
+    ]
+  },
+  {
+    "id": "st-john-henry-newman",
+    "name": "St. John Henry Newman",
+    "title": "Cardinal and Doctor of the Church",
+    "feast_day": "October 9",
+    "era": "19th century",
+    "short_bio": "An Anglican cleric and Oxford scholar whose long, costly conversion led him into the Catholic Church. His writings on conscience, doubt, and intellectual honesty remain widely read.",
+    "patronages": ["intellectuals", "those struggling with doubt", "converts"],
+    "virtues": ["intellectual honesty", "perseverance", "humility"],
+    "keywords": ["doubt", "conscience", "conversion", "study"],
+    "themes": ["vocation", "study", "conversion", "trust"],
+    "source_links": [
+      "https://www.vatican.va/content/francesco/en/homilies/2019/documents/papa-francesco_20191013_omelia-canonizzazione.html",
+      "https://www.newmanreader.org/",
+      "https://plato.stanford.edu/entries/newman/"
+    ]
+  },
+  {
+    "id": "st-edith-stein",
+    "name": "St. Teresa Benedicta of the Cross (Edith Stein)",
+    "title": "Carmelite Nun and Martyr",
+    "feast_day": "August 9",
+    "era": "20th century",
+    "short_bio": "A Jewish philosopher and convert to Catholicism who entered Carmel and was killed at Auschwitz. Patron of Europe, of converts, and of those whose faith was hard-won through study.",
+    "patronages": ["Europe", "converts", "loss of parents", "martyrs"],
+    "virtues": ["truth-seeking", "courage", "self-gift"],
+    "keywords": ["doubt", "study", "Jewish heritage", "martyrdom"],
+    "themes": ["vocation", "study", "suffering", "conversion"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/ns_lit_doc_19981011_edith_stein_en.html",
+      "https://www.catholicnewsagency.com/saint/st-teresa-benedicta-of-the-cross-edith-stein-577",
+      "https://www.britannica.com/biography/Edith-Stein"
+    ]
+  },
+  {
+    "id": "st-bernadette",
+    "name": "St. Bernadette Soubirous",
+    "title": "Visionary of Lourdes",
+    "feast_day": "April 16",
+    "era": "19th century",
+    "short_bio": "A poor and chronically ill girl who experienced the apparitions at Lourdes. She is a patroness of the sick and of those whose faithfulness is hidden.",
+    "patronages": ["sick", "Lourdes", "the poor", "shepherds"],
+    "virtues": ["humility", "patience", "trust"],
+    "keywords": ["illness", "hidden faith", "Mary", "poverty"],
+    "themes": ["suffering", "trust", "Mary", "healing"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/ns_lit_doc_19330616_bernadette-soubirous_en.html",
+      "https://www.lourdes-france.org/en/",
+      "https://www.britannica.com/biography/Saint-Bernadette-of-Lourdes"
+    ]
+  },
+  {
+    "id": "st-don-bosco",
+    "name": "St. John Bosco (Don Bosco)",
+    "title": "Founder of the Salesians",
+    "feast_day": "January 31",
+    "era": "19th century",
+    "short_bio": "A priest of Turin who devoted his life to forming and protecting young people. He is widely invoked by youth, students, and educators.",
+    "patronages": ["youth", "students", "editors", "apprentices"],
+    "virtues": ["joy", "pastoral charity", "fortitude"],
+    "keywords": ["youth", "education", "discernment", "joy"],
+    "themes": ["vocation", "work", "family"],
+    "source_links": [
+      "https://www.vatican.va/content/leo-xiii/en/encyclicals/documents/hf_l-xiii_enc_31051888_quod-multum.html",
+      "https://www.salesians.org.uk/about/who-we-are/st-john-bosco",
+      "https://www.britannica.com/biography/Saint-John-Bosco"
+    ]
+  },
+  {
+    "id": "st-oscar-romero",
+    "name": "St. Óscar Romero",
+    "title": "Archbishop of San Salvador and Martyr",
+    "feast_day": "March 24",
+    "era": "20th century",
+    "short_bio": "An archbishop who became a tireless defender of the poor and was assassinated while celebrating Mass. His witness is invoked by those serving justice and mercy at cost.",
+    "patronages": ["the persecuted", "Catholic catechists", "the Americas"],
+    "virtues": ["courage", "pastoral charity", "justice"],
+    "keywords": ["justice", "service", "martyrdom", "voice for the poor"],
+    "themes": ["vocation", "work", "service", "purpose"],
+    "source_links": [
+      "https://www.vatican.va/content/francesco/en/homilies/2018/documents/papa-francesco_20181014_omelia-canonizzazione.html",
+      "https://www.usccb.org/prayer-and-worship/saints",
+      "https://www.britannica.com/biography/Oscar-Romero"
+    ]
+  },
+  {
+    "id": "st-maria-goretti",
+    "name": "St. Maria Goretti",
+    "title": "Virgin and Martyr",
+    "feast_day": "July 6",
+    "era": "20th century",
+    "short_bio": "An Italian girl who forgave her attacker before dying of his wounds. Her witness is associated with mercy in the face of grave harm and with hope for victims and offenders alike.",
+    "patronages": ["youth", "victims of crime", "those who forgive"],
+    "virtues": ["forgiveness", "purity", "fortitude"],
+    "keywords": ["forgiveness", "youth", "mercy", "innocence"],
+    "themes": ["family", "suffering", "forgiveness", "youth"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/2002/ns_lit_doc_20020624_maria-goretti_en.html",
+      "https://www.usccb.org/prayer-and-worship/saints",
+      "https://www.britannica.com/biography/Saint-Maria-Goretti"
+    ]
+  },
+  {
+    "id": "st-mother-teresa",
+    "name": "St. Teresa of Calcutta (Mother Teresa)",
+    "title": "Founder of the Missionaries of Charity",
+    "feast_day": "September 5",
+    "era": "20th century",
+    "short_bio": "Founded a religious community to serve the poorest of the poor in Calcutta and worldwide. Her own decades of spiritual darkness, revealed posthumously, comfort those suffering dryness in faith.",
+    "patronages": ["the dying", "those serving the poor", "World Youth Day"],
+    "virtues": ["charity", "perseverance", "faithfulness in dryness"],
+    "keywords": ["service", "darkness in prayer", "the poor", "ordinary acts"],
+    "themes": ["work", "suffering", "service", "trust"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/2003/ns_lit_doc_20031019_madre-teresa_en.html",
+      "https://www.motherteresa.org/",
+      "https://www.britannica.com/biography/Saint-Teresa-of-Calcutta"
+    ]
+  },
+  {
+    "id": "st-michael",
+    "name": "St. Michael the Archangel",
+    "title": "Archangel",
+    "feast_day": "September 29",
+    "era": "all ages",
+    "short_bio": "Defender against evil and protector of the faithful. The traditional St. Michael Prayer is invoked for spiritual protection.",
+    "patronages": ["police officers", "soldiers", "the sick", "spiritual protection"],
+    "virtues": ["fortitude", "courage", "fidelity"],
+    "keywords": ["protection", "spiritual warfare", "fortitude"],
+    "themes": ["suffering", "fortitude", "protection", "trust"],
+    "source_links": [
+      "https://www.vatican.va/content/john-paul-ii/en/messages/pont_messages/1986/documents/hf_jp-ii_mes_19861224_san-michele.html",
+      "https://www.usccb.org/prayer-and-worship/saints",
+      "https://www.britannica.com/topic/Michael-the-archangel"
+    ]
+  },
+  {
+    "id": "bl-pier-giorgio",
+    "name": "Bl. Pier Giorgio Frassati",
+    "title": "Lay Dominican",
+    "feast_day": "July 4",
+    "era": "20th century",
+    "short_bio": "An Italian student known for joyful charity, mountaineering, and quiet care for the poor. He died young of polio. He is widely beloved by young adults seeking ordinary holiness.",
+    "patronages": ["young adults", "students", "athletes"],
+    "virtues": ["joy", "charity", "purity"],
+    "keywords": ["youth", "charity", "ordinary life", "joy"],
+    "themes": ["vocation", "youth", "charity", "purpose"],
+    "source_links": [
+      "https://www.vatican.va/content/john-paul-ii/en/homilies/1990/documents/hf_jp-ii_hom_19900520_pier-giorgio-frassati.html",
+      "https://frassatiusa.org/",
+      "https://www.britannica.com/biography/Pier-Giorgio-Frassati"
+    ]
+  },
+  {
+    "id": "st-philip-neri",
+    "name": "St. Philip Neri",
+    "title": "Founder of the Oratorians",
+    "feast_day": "May 26",
+    "era": "16th century",
+    "short_bio": "A Roman priest known for joyful holiness, friendship, and gentle confession. He is invoked against scrupulosity and for joyful perseverance.",
+    "patronages": ["Rome", "joyful evangelists"],
+    "virtues": ["joy", "humility", "friendship"],
+    "keywords": ["joy", "humor", "friendship", "scrupulosity"],
+    "themes": ["prayer", "trust", "vocation"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/ns_lit_doc_20020526_philip-neri_en.html",
+      "https://www.britannica.com/biography/Saint-Philip-Neri",
+      "https://www.newadvent.org/cathen/12018b.htm"
+    ]
+  },
+  {
+    "id": "st-gemma-galgani",
+    "name": "St. Gemma Galgani",
+    "title": "Mystic and Lay Person",
+    "feast_day": "April 11",
+    "era": "19th-20th century",
+    "short_bio": "An Italian laywoman who endured profound suffering with mystical patience. She is a patroness for those experiencing illness and loss in young adulthood.",
+    "patronages": ["young adults", "tuberculosis sufferers", "those with bereavement"],
+    "virtues": ["patience", "trust", "purity"],
+    "keywords": ["illness", "grief", "trust", "young adult"],
+    "themes": ["suffering", "trust", "youth"],
+    "source_links": [
+      "https://www.vatican.va/news_services/liturgy/saints/ns_lit_doc_20040430_gemma-galgani_en.html",
+      "https://www.passionist.org/saint-gemma-galgani/",
+      "https://www.britannica.com/biography/Saint-Gemma-Galgani"
+    ]
   }
 ]

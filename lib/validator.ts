@@ -157,20 +157,143 @@ export const profileActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
+// Output-side banlist. Run on serialized model output before returning to clients.
+// Phrasing is lowercase and substring-matched, so include the most common
+// surface forms an LLM might emit. Update with every safety incident.
 const bannedRoleplayTerms = [
-  "i am jesus",
+  // Sacrament simulation
   "i absolve you",
+  "i forgive your sins",
+  "ego te absolvo",
+  "this confession is valid",
+  "your sins are forgiven",
+  // Priest / spiritual director impersonation
+  "as your priest",
   "as your confessor",
-  "i am mary",
-  "i am saint",
   "as your spiritual director",
+  "i, your priest",
+  "speaking as a priest",
+  // Divine / Marian impersonation
+  "i am jesus",
+  "i am christ",
+  "i am the lord",
+  "i am god",
+  "i am mary",
+  "i am the blessed virgin",
+  "i am saint",
+  "i am the holy spirit",
+  // Coercive / manipulative religious instructions
+  "you must repeat after me to be saved",
+  "you will go to hell unless",
+  "the only way to be saved is to",
 ];
 
 export const assertGuardrails = (text: string): void => {
   const lower = text.toLowerCase();
   for (const term of bannedRoleplayTerms) {
     if (lower.includes(term)) {
-      throw new Error("Guardrail violation: impersonation or sacramental simulation detected.");
+      throw new Error(
+        `Guardrail violation: impersonation or sacramental simulation detected (matched: "${term}").`,
+      );
     }
   }
+};
+
+// --- Phase 2 schemas: citations + day-aware plan + safety pre-screen ------
+
+export const citationSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("catechism"),
+    // Catechism of the Catholic Church paragraph numbers run from §1 to §2865.
+    paragraph: z.number().int().min(1).max(2865),
+    label: z.string().min(3).max(160),
+  }),
+  z.object({
+    kind: z.literal("scripture"),
+    book: z.string().min(2).max(60),
+    chapter: z.number().int().min(1).max(150),
+    verse: z.string().min(1).max(20),
+    label: z.string().min(3).max(160),
+  }),
+  z.object({
+    kind: z.literal("saint_writing"),
+    saint_id: z.string().min(1).max(60),
+    title: z.string().min(2).max(120),
+    label: z.string().min(3).max(160),
+  }),
+  z.object({
+    kind: z.literal("liturgy"),
+    source: z.enum(["liturgy_of_the_hours", "roman_missal"]),
+    label: z.string().min(3).max(160),
+  }),
+]);
+
+export const devotionPromptV2Schema = z.object({
+  type: z.enum(["reflection", "prayer", "journal", "practice"]),
+  title: z.string().min(3).max(80),
+  body: z.string().min(40).max(1200),
+  estimated_minutes: z.number().int().min(2).max(60),
+  citations: z.array(citationSchema).min(1).max(4),
+});
+
+export const planDaySchema = z.object({
+  day_index: z.number().int().min(0).max(6),
+  theme: z.string().min(3).max(80),
+  liturgical_note: z.string().min(0).max(280).nullable(),
+  prompts: z.array(devotionPromptV2Schema).min(2).max(4),
+});
+
+export const devotionPlanV2Schema = z
+  .object({
+    primary_route: routeLabelSchema,
+    situation_summary: z.string().min(1).max(400),
+    saint_matches: z.array(saintMatchSchema).min(1).max(3),
+    total_days: z.number().int().min(5).max(7),
+    days: z.array(planDaySchema).min(5).max(7),
+    safety_note: z.string().nullable(),
+    content_label: z.literal("devotional_reflection"),
+    teaching_authority_note: z.string().min(1),
+    pastoral_escalation: pastoralEscalationSchema,
+    sources_used: z.array(z.string().min(1)).min(1),
+  })
+  .refine((plan) => plan.days.length === plan.total_days, {
+    message: "days.length must equal total_days",
+    path: ["days"],
+  })
+  .refine(
+    (plan) => plan.days.every((day, idx) => day.day_index === idx),
+    { message: "day_index values must be 0-indexed and contiguous", path: ["days"] },
+  );
+
+export const safetySeveritySchema = z.enum(["none", "concern", "crisis"]);
+
+export const safetyPrescreenSchema = z.object({
+  severity: safetySeveritySchema,
+  categories: z.array(z.string().min(1)).max(8),
+  reason: z.string().min(0).max(400),
+});
+
+// --- Input sanitization (prompt-injection defense) -----------------------
+// Strip control characters and tokens that look like role-control delimiters.
+// Result is wrapped by callers in <user_text>...</user_text> in the prompt
+// and the system prompt instructs the model to treat that block as untrusted
+// data, never as instructions.
+const PROMPT_INJECTION_PATTERNS: ReadonlyArray<RegExp> = [
+  // Role-control tags an LLM might honour.
+  new RegExp("</?\\s*(system|assistant|user|tool|tool_use|tool_result|human)\\s*>", "gi"),
+  // Llama-style instruction delimiters.
+  new RegExp("\\[/?(?:INST|SYS|SYSTEM|ASSISTANT|USER)\\]", "gi"),
+  // OpenAI-style chat-ML role tokens.
+  new RegExp("<\\|[a-z_]{1,40}\\|>", "gi"),
+  // ASCII control chars except \\n (0x0a), \\r (0x0d), \\t (0x09).
+  new RegExp("[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f]", "g"),
+];
+
+export const sanitizeUserText = (raw: string): string => {
+  let cleaned = raw.normalize("NFKC");
+  for (const pattern of PROMPT_INJECTION_PATTERNS) {
+    cleaned = cleaned.replace(pattern, " ");
+  }
+  // Collapse repeated whitespace, trim.
+  return cleaned.replace(/[\r\n\t]+/g, "\n").replace(/[ \t]{2,}/g, " ").trim();
 };
