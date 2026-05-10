@@ -340,8 +340,8 @@ const buildOfflineFallback = (
           title: i === 0 ? "Read slowly" : "Read again",
           body:
             "Read Psalm 23 slowly today, then sit with one verse that catches your attention. " +
-            "This devotional content is a fallback — the live plan generator was unavailable. " +
-            "It is offered as a safe, source-grounded reflection until the connection is restored.",
+            "This is a safe fallback plan, source-grounded in scripture, offered when the " +
+            "tailored devotional plan could not be returned. You can request a new plan anytime.",
           estimated_minutes: 5,
           citations: [psalm23],
         },

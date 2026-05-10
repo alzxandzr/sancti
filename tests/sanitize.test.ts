@@ -69,6 +69,15 @@ test("sanitizeUserText strips bidi overrides, zero-width, and BOM characters", (
   }
 });
 
+test("sanitizeUserText converts tabs to spaces (NOT newlines) so inline tabulation is preserved", () => {
+  // Regression: previously `[\r\n\t]+` collapsed tabs into newlines, turning
+  // a tab-tabulated single line into multi-line text and altering meaning.
+  const out = sanitizeUserText("name\talice\tage\t30");
+  assert.equal(out, "name alice age 30");
+  // No newline character introduced.
+  assert.ok(!out.includes("\n"), "tab must not become a newline");
+});
+
 test("sanitizeUserText collapses whitespace runs but keeps single newlines", () => {
   const out = sanitizeUserText("line one\n\n\nline    two   three");
   assert.equal(out, "line one\nline two three");

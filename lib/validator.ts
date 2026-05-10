@@ -312,6 +312,15 @@ export const sanitizeUserText = (raw: string): string => {
   for (const pattern of PROMPT_INJECTION_PATTERNS) {
     cleaned = cleaned.replace(pattern, " ");
   }
-  // Collapse repeated whitespace, trim.
-  return cleaned.replace(/[\r\n\t]+/g, "\n").replace(/[ \t]{2,}/g, " ").trim();
+  // Whitespace normalization: tabs are inline whitespace and become a single
+  // space (turning them into newlines would change the user's meaning, e.g.
+  // a single tabulated line becomes several "sentences"). \r\n line endings
+  // collapse to \n. Runs of spaces collapse to one. Multiple newlines
+  // collapse to one. Trim leading/trailing whitespace.
+  return cleaned
+    .replace(/\t+/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .replace(/ {2,}/g, " ")
+    .trim();
 };

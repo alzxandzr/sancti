@@ -17,6 +17,32 @@ test("classifyInput short-circuits to SAFETY_REVIEW on heuristic crisis without 
   assert.equal(handle.callCount(), 0, "no LLM call for heuristic crisis");
 });
 
+test("classifyInput short-circuits to SAFETY_REVIEW when LLM pre-screen says concern", async (t) => {
+  // Per prompts/safety.ts, concern means "a devotional plan alone would be
+  // irresponsible without first surfacing crisis resources" (e.g., active
+  // domestic violence). Both crisis AND concern must short-circuit.
+  const handle = installFakeAnthropic((params, i) => {
+    if (i === 0) {
+      return okJsonResponse({
+        severity: "concern",
+        categories: ["abuse_or_violence"],
+        reason: "user reports current domestic violence",
+      });
+    }
+    return okJsonResponse({});
+  });
+  t.after(resetFakeAnthropic);
+
+  const out = await classifyInput(
+    "My partner has been hitting me again and I don't know what to do. Should I just keep praying?",
+  );
+
+  assert.equal(out.classification.primary_route, "SAFETY_REVIEW");
+  assert.equal(out.short_circuited, true);
+  assert.equal(out.safety.severity, "concern");
+  assert.equal(handle.callCount(), 1, "classifier never called when concern short-circuits");
+});
+
 test("classifyInput escalates to SAFETY_REVIEW when LLM pre-screen says crisis", async (t) => {
   const handle = installFakeAnthropic((params, i) => {
     if (i === 0) {

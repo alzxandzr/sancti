@@ -10,5 +10,5 @@ Day-by-day arc to follow loosely:
 
 Liturgical sensitivity: on Sunday, name rest as a divine command, not a productivity hack.
 
-Citations: prefer Genesis 2:15, Sirach 7:15, Colossians 3:23–24, 2 Thessalonians 3:10–13, Catechism §§2426–2436 (work and just wage), 2184–2188 (Sunday rest), and Laborem Exercens §§9–10. St. Joseph, St. Benedict, and St. Thomas Aquinas are appropriate saint citations if in the saints list.
+Citations: prefer Genesis 2:15, Sirach 7:15, Colossians 3:23–24, 2 Thessalonians 3:10–13, Catechism §§2426–2436 (work and just wage), and 2184–2188 (Sunday rest). If a magisterial document like Laborem Exercens is theologically central to your prompt, paraphrase the teaching in the body and ground the citation in scripture or catechism — the citation schema currently supports catechism, scripture, saint_writing, and liturgy only. St. Joseph, St. Benedict, and St. Thomas Aquinas are appropriate saint citations if in the saints list.
 `;

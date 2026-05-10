@@ -145,11 +145,17 @@ export const classifyInput = async (
     // Keep `safety = heuristic`. Never block on a pre-screen outage.
   }
 
-  if (safety.severity === "crisis") {
+  // Both `crisis` AND `concern` short-circuit to SAFETY_REVIEW. Per the
+  // pre-screen contract in prompts/safety.ts, "concern" means
+  // "a devotional plan alone would be irresponsible without first surfacing
+  // crisis resources" (e.g., active domestic violence, severe untreated
+  // mental illness, overdose risk). Routing those into a normal devotional
+  // plan would contradict the contract.
+  if (safety.severity === "crisis" || safety.severity === "concern") {
     recordSafetyEvent({
       user_id: ctx.user_id ?? null,
       trigger: "input_prescreen",
-      severity: "crisis",
+      severity: safety.severity,
       route_at_trigger: "SAFETY_REVIEW",
       detail: { source: "llm", categories: safety.categories, reason: safety.reason },
     });

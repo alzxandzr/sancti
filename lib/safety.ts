@@ -44,24 +44,27 @@ const CONCERN_PHRASES: ReadonlyArray<string> = [
 ];
 
 export const heuristicSafetyScan = (rawText: string): SafetyPrescreen => {
+  // The `reason` field is structured-logged + persisted to safety_events;
+  // never include the matched substring or any user input verbatim. The
+  // safety pre-screen prompt enforces the same rule on the LLM side.
   const lower = rawText.toLowerCase();
-  const crisisHits = CRISIS_PHRASES.filter((p) => lower.includes(p));
-  if (crisisHits.length > 0) {
+  const crisisHit = CRISIS_PHRASES.some((p) => lower.includes(p));
+  if (crisisHit) {
     return {
       severity: "crisis",
       categories: ["self_harm_or_suicide"],
-      reason: `heuristic match: ${crisisHits[0]}`,
+      reason: "heuristic_match_self_harm_or_suicide",
     };
   }
-  const concernHits = CONCERN_PHRASES.filter((p) => lower.includes(p));
-  if (concernHits.length > 0) {
+  const concernHit = CONCERN_PHRASES.some((p) => lower.includes(p));
+  if (concernHit) {
     return {
       severity: "concern",
-      categories: ["safety_concern"],
-      reason: `heuristic match: ${concernHits[0]}`,
+      categories: ["abuse_or_violence"],
+      reason: "heuristic_match_abuse_or_violence",
     };
   }
-  return { severity: "none", categories: [], reason: "no heuristic match" };
+  return { severity: "none", categories: [], reason: "no_heuristic_match" };
 };
 
 // --- Crisis resources -----------------------------------------------------

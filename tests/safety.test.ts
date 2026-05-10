@@ -1,6 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { crisisResourcesForLocale } from "../lib/safety";
+import { crisisResourcesForLocale, heuristicSafetyScan } from "../lib/safety";
+
+test("heuristicSafetyScan reason field never includes the verbatim user phrase", () => {
+  // PII: heuristic reason flows into recordSafetyEvent and is logged/persisted.
+  // It must be a category code, never the matched substring.
+  const crisis = heuristicSafetyScan("I want to die. I have a plan.");
+  assert.equal(crisis.severity, "crisis");
+  assert.ok(!/want to die/i.test(crisis.reason), "must not echo user phrase");
+  assert.match(crisis.reason, /^heuristic_match_/);
+
+  const concern = heuristicSafetyScan("My husband is abusive and I'm scared.");
+  assert.equal(concern.severity, "concern");
+  assert.ok(!/abusive/i.test(concern.reason), "must not echo user phrase");
+  assert.match(concern.reason, /^heuristic_match_/);
+
+  const none = heuristicSafetyScan("I am thinking about a career change.");
+  assert.equal(none.severity, "none");
+  assert.equal(none.reason, "no_heuristic_match");
+});
 
 test("crisisResourcesForLocale appends INT to every regional match", () => {
   // Regression: previously a recognized non-US locale (e.g. en-GB) returned
