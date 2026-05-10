@@ -74,12 +74,19 @@ export const crisisResourcesForLocale = (
   // Locale formats accepted: "en-US", "en_US", "en", "US"
   const norm = (locale ?? "").toLowerCase();
   const region = norm.split(/[-_]/).slice(-1)[0]?.toUpperCase();
+  // INT entries carry the universal "dial your country's emergency number" /
+  // "speak with a trusted priest" guidance. They must always be appended so
+  // a non-US locale never receives FEWER resources than no locale at all.
+  const international = resources.filter((r) => r.region === "INT");
   if (region) {
-    const matched = resources.filter((r) => r.region === region);
-    if (matched.length > 0) return matched;
+    const regional = resources.filter((r) => r.region === region);
+    if (regional.length > 0) return [...regional, ...international];
   }
-  // Fallback: international + US.
-  return resources.filter((r) => r.region === "US" || r.region === "INT");
+  // Fallback when no region matches: US + international.
+  return [
+    ...resources.filter((r) => r.region === "US"),
+    ...international,
+  ];
 };
 
 // --- Safety event logging --------------------------------------------------

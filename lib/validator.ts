@@ -169,8 +169,13 @@ const bannedRoleplayTerms = [
   "your sins are forgiven",
   // Romance-language equivalents (lexical only — paraphrase coverage is
   // a Phase-5 hardening task; semantic detection lives in the prompt).
+  // The two French entries are intentional: ASCII apostrophe (U+0027) and
+  // typographic apostrophe (U+2019). assertGuardrails is a substring match
+  // on lowercased text without normalizing apostrophes, so both forms are
+  // needed to catch a model emitting either.
   "je t'absous",
   "je t’absous",
+  "je vous absous",
   "te absuelvo",
   "ti assolvo",
   // Priest / spiritual director impersonation
