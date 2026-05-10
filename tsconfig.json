@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "noEmit": true,
-    "types": ["./types/globals"]
+    "types": ["node"]
   },
-  "include": ["app", "api", "lib", "prompts", "types"]
+  "include": ["app", "api", "lib", "prompts", "scripts", "tests", "types"]
 }

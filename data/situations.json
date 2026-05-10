@@ -26,5 +26,25 @@
   {"id":"wrk-05","label":"Balancing ambition and family life","category":"WORK_PURPOSE","synonyms":["work life balance","career family tension"],"emotional_tags":["torn","guilty"],"life_stage_tags":["adult"]},
   {"id":"wrk-06","label":"Academic pressure and procrastination","category":"WORK_PURPOSE","synonyms":["study stress","school workload"],"emotional_tags":["stressed","stuck"],"life_stage_tags":["teen","young-adult"]},
   {"id":"wrk-07","label":"Leading a difficult team","category":"WORK_PURPOSE","synonyms":["management stress","team conflict"],"emotional_tags":["pressured","responsible"],"life_stage_tags":["adult"]},
-  {"id":"wrk-08","label":"Launching a creative project","category":"WORK_PURPOSE","synonyms":["creative block","new initiative"],"emotional_tags":["inspired","fearful"],"life_stage_tags":["young-adult","adult"]}
+  {"id":"wrk-08","label":"Launching a creative project","category":"WORK_PURPOSE","synonyms":["creative block","new initiative"],"emotional_tags":["inspired","fearful"],"life_stage_tags":["young-adult","adult"]},
+
+  {"id":"suf-07","label":"Struggling with addiction or recovery","category":"SUFFERING_HARDSHIP","synonyms":["substance use","sobriety","relapse"],"emotional_tags":["ashamed","determined"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"suf-08","label":"Coping with depression","category":"SUFFERING_HARDSHIP","synonyms":["low mood","despair"],"emotional_tags":["sad","heavy"],"life_stage_tags":["teen","young-adult","adult"]},
+  {"id":"suf-09","label":"Wrestling with doubt or faith crisis","category":"SUFFERING_HARDSHIP","synonyms":["losing faith","intellectual struggle","unbelief"],"emotional_tags":["confused","tired"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"suf-10","label":"After a miscarriage or pregnancy loss","category":"SUFFERING_HARDSHIP","synonyms":["miscarriage","pregnancy loss","stillbirth"],"emotional_tags":["grief","numb"],"life_stage_tags":["adult"]},
+
+  {"id":"fam-07","label":"Estrangement from a parent","category":"RELATIONSHIPS_FAMILY","synonyms":["cut off","distance from parent"],"emotional_tags":["sad","resentful"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"fam-08","label":"Single parent overwhelm","category":"RELATIONSHIPS_FAMILY","synonyms":["solo parenting","raising alone"],"emotional_tags":["exhausted","faithful"],"life_stage_tags":["adult"]},
+  {"id":"fam-09","label":"Wanting children but unable to conceive","category":"RELATIONSHIPS_FAMILY","synonyms":["infertility","longing for children"],"emotional_tags":["heartbroken","hopeful"],"life_stage_tags":["adult"]},
+  {"id":"fam-10","label":"Holding faith differences in a marriage","category":"RELATIONSHIPS_FAMILY","synonyms":["mixed-faith marriage","spouse not Catholic"],"emotional_tags":["concerned","prayerful"],"life_stage_tags":["adult"]},
+
+  {"id":"voc-06","label":"Considering a career change toward service","category":"VOCATION_DISCERNMENT","synonyms":["career pivot","mission work","volunteering"],"emotional_tags":["restless","hopeful"],"life_stage_tags":["young-adult","adult"]},
+  {"id":"voc-07","label":"Returning to the Church after years away","category":"VOCATION_DISCERNMENT","synonyms":["reverts","coming back to faith"],"emotional_tags":["nervous","searching"],"life_stage_tags":["young-adult","adult","senior"]},
+
+  {"id":"gen-01","label":"Wanting to start a daily prayer life","category":"GENERAL_GUIDANCE","synonyms":["beginning prayer","daily prayer"],"emotional_tags":["motivated","unsure"],"life_stage_tags":["teen","young-adult","adult","senior"]},
+  {"id":"gen-02","label":"Looking for a saint to walk with this season","category":"GENERAL_GUIDANCE","synonyms":["spiritual companion","patron"],"emotional_tags":["curious","open"],"life_stage_tags":["all"]},
+  {"id":"gen-03","label":"Wanting to live more simply","category":"GENERAL_GUIDANCE","synonyms":["simpler life","slow living"],"emotional_tags":["tired","longing"],"life_stage_tags":["young-adult","adult"]},
+
+  {"id":"saf-01","label":"Thinking about ending my life","category":"SAFETY_REVIEW","synonyms":["suicidal","wanting to die"],"emotional_tags":["hopeless","heavy"],"life_stage_tags":["teen","young-adult","adult","senior"]},
+  {"id":"saf-02","label":"Currently being abused or threatened","category":"SAFETY_REVIEW","synonyms":["domestic violence","abuse"],"emotional_tags":["fearful","unsafe"],"life_stage_tags":["all"]}
 ]

@@ -5,6 +5,11 @@
   {"saint_id":"st-teresa-avila","route":"VOCATION_DISCERNMENT","themes":["prayer","perseverance","vocation"],"weight":82},
   {"saint_id":"st-john-vianney","route":"VOCATION_DISCERNMENT","themes":["service","vocation","mercy"],"weight":80},
   {"saint_id":"bl-carlo-acutis","route":"VOCATION_DISCERNMENT","themes":["youth","mission","vocation"],"weight":76},
+  {"saint_id":"st-don-bosco","route":"VOCATION_DISCERNMENT","themes":["youth","vocation","joy"],"weight":83},
+  {"saint_id":"st-john-henry-newman","route":"VOCATION_DISCERNMENT","themes":["doubt","conscience","conversion"],"weight":85},
+  {"saint_id":"st-edith-stein","route":"VOCATION_DISCERNMENT","themes":["truth-seeking","conversion","study"],"weight":81},
+  {"saint_id":"bl-pier-giorgio","route":"VOCATION_DISCERNMENT","themes":["youth","joy","charity"],"weight":78},
+  {"saint_id":"st-philip-neri","route":"VOCATION_DISCERNMENT","themes":["joy","friendship","prayer"],"weight":74},
 
   {"saint_id":"st-dymphna","route":"SUFFERING_HARDSHIP","themes":["healing","hope","anxiety"],"weight":98},
   {"saint_id":"st-faustina","route":"SUFFERING_HARDSHIP","themes":["mercy","trust","healing"],"weight":94},
@@ -12,6 +17,12 @@
   {"saint_id":"st-therese","route":"SUFFERING_HARDSHIP","themes":["trust","little-way","daily-faithfulness"],"weight":90},
   {"saint_id":"st-maximilian-kolbe","route":"SUFFERING_HARDSHIP","themes":["charity","sacrifice","hope"],"weight":88},
   {"saint_id":"st-teresa-avila","route":"SUFFERING_HARDSHIP","themes":["perseverance","prayer","fortitude"],"weight":83},
+  {"saint_id":"st-rita","route":"SUFFERING_HARDSHIP","themes":["grief","loss","forgiveness"],"weight":92},
+  {"saint_id":"st-bernadette","route":"SUFFERING_HARDSHIP","themes":["illness","hidden-faith","trust"],"weight":89},
+  {"saint_id":"st-mother-teresa","route":"SUFFERING_HARDSHIP","themes":["dryness","faithfulness","charity"],"weight":91},
+  {"saint_id":"st-matt-talbot","route":"SUFFERING_HARDSHIP","themes":["addiction","recovery","penance"],"weight":92},
+  {"saint_id":"st-gemma-galgani","route":"SUFFERING_HARDSHIP","themes":["illness","trust","youth"],"weight":80},
+  {"saint_id":"st-michael","route":"SUFFERING_HARDSHIP","themes":["protection","fortitude","spiritual-warfare"],"weight":78},
 
   {"saint_id":"st-monica","route":"RELATIONSHIPS_FAMILY","themes":["family","intercession","hope"],"weight":98},
   {"saint_id":"st-joseph","route":"RELATIONSHIPS_FAMILY","themes":["family","protection","trust"],"weight":96},
@@ -19,11 +30,30 @@
   {"saint_id":"st-elizabeth-ann-seton","route":"RELATIONSHIPS_FAMILY","themes":["family","education","resilience"],"weight":90},
   {"saint_id":"st-john-paul-ii","route":"RELATIONSHIPS_FAMILY","themes":["family","hope","dignity"],"weight":85},
   {"saint_id":"st-maximilian-kolbe","route":"RELATIONSHIPS_FAMILY","themes":["family","charity","self-gift"],"weight":80},
+  {"saint_id":"sts-louis-zelie-martin","route":"RELATIONSHIPS_FAMILY","themes":["marriage","parenting","ordinary-holiness"],"weight":97},
+  {"saint_id":"st-anne","route":"RELATIONSHIPS_FAMILY","themes":["motherhood","grandmother","family"],"weight":88},
+  {"saint_id":"st-rita","route":"RELATIONSHIPS_FAMILY","themes":["marriage","grief","forgiveness"],"weight":89},
+  {"saint_id":"st-maria-goretti","route":"RELATIONSHIPS_FAMILY","themes":["forgiveness","youth","mercy"],"weight":78},
 
   {"saint_id":"st-joseph","route":"WORK_PURPOSE","themes":["work","integrity","diligence"],"weight":97},
   {"saint_id":"st-benedict","route":"WORK_PURPOSE","themes":["work","discipline","community"],"weight":96},
   {"saint_id":"st-thomas-aquinas","route":"WORK_PURPOSE","themes":["study","wisdom","clarity"],"weight":93},
   {"saint_id":"st-francis","route":"WORK_PURPOSE","themes":["purpose","simplicity","charity"],"weight":88},
   {"saint_id":"st-cecilia","route":"WORK_PURPOSE","themes":["creativity","witness","joy"],"weight":82},
-  {"saint_id":"bl-carlo-acutis","route":"WORK_PURPOSE","themes":["technology","mission","youth"],"weight":79}
+  {"saint_id":"bl-carlo-acutis","route":"WORK_PURPOSE","themes":["technology","mission","youth"],"weight":79},
+  {"saint_id":"st-oscar-romero","route":"WORK_PURPOSE","themes":["service","justice","courage"],"weight":85},
+  {"saint_id":"st-mother-teresa","route":"WORK_PURPOSE","themes":["service","charity","perseverance"],"weight":84},
+  {"saint_id":"st-don-bosco","route":"WORK_PURPOSE","themes":["education","youth","joy"],"weight":82},
+
+  {"saint_id":"st-therese","route":"GENERAL_GUIDANCE","themes":["trust","little-way","daily-faithfulness"],"weight":92},
+  {"saint_id":"st-francis","route":"GENERAL_GUIDANCE","themes":["simplicity","joy","charity"],"weight":89},
+  {"saint_id":"st-john-paul-ii","route":"GENERAL_GUIDANCE","themes":["hope","dignity","prayer"],"weight":85},
+  {"saint_id":"bl-carlo-acutis","route":"GENERAL_GUIDANCE","themes":["mission","youth","eucharist"],"weight":78},
+  {"saint_id":"bl-pier-giorgio","route":"GENERAL_GUIDANCE","themes":["joy","charity","ordinary-life"],"weight":80},
+  {"saint_id":"st-philip-neri","route":"GENERAL_GUIDANCE","themes":["joy","friendship","scrupulosity"],"weight":76},
+
+  {"saint_id":"st-dymphna","route":"SAFETY_REVIEW","themes":["healing","mental-health","hope"],"weight":98},
+  {"saint_id":"st-faustina","route":"SAFETY_REVIEW","themes":["mercy","trust","accompaniment"],"weight":92},
+  {"saint_id":"st-john-paul-ii","route":"SAFETY_REVIEW","themes":["dignity","hope","accompaniment"],"weight":85},
+  {"saint_id":"st-michael","route":"SAFETY_REVIEW","themes":["protection","fortitude","spiritual-warfare"],"weight":82}
 ]
