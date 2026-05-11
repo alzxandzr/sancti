@@ -27,3 +27,9 @@ supabase/.branches/
 !.vscode/settings.json
 !.vscode/extensions.json
 .DS_Store
+*.swp
+
+# Local Claude Code / agent tooling
+.claude/
+.agents/
+skills-lock.json
