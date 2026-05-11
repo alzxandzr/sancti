@@ -44,13 +44,24 @@ export interface MatchSaintsContext {
   liturgical?: LiturgicalDay | null;
 }
 
+// Theme overlap is multiplied by THEME_BOOST so user-specific themes
+// meaningfully shift the ranking; otherwise the base mapping weight
+// (typically 60–95) dominates and the top 3 never change per-route.
+const THEME_BOOST = 15;
+
 export const matchSaints = async (
   route: RouteLabel,
   themes: string[],
   ctx: MatchSaintsContext = {},
+  excludeIds: string[] = [],
 ): Promise<SaintMatch[]> => {
-  const parsed = matchSaintsInputSchema.parse({ route, themes });
+  const parsed = matchSaintsInputSchema.parse({
+    route,
+    themes,
+    exclude_ids: excludeIds.length > 0 ? excludeIds : undefined,
+  });
   const normalizedThemes = parsed.themes.map((theme) => theme.toLowerCase());
+  const excluded = new Set(parsed.exclude_ids ?? []);
 
   const liturgical =
     ctx.liturgical !== undefined
@@ -59,39 +70,63 @@ export const matchSaints = async (
 
   const ranked = matchWeights
     .filter((entry) => entry.route === parsed.route)
+    .filter((entry) => !excluded.has(entry.saint_id))
     .map((entry) => {
       const saint = allSaints.find((candidate) => candidate.id === entry.saint_id);
       if (!saint) return null;
       const saintThemes = saint.themes.map((t) => t.toLowerCase());
       const sharedThemes = saintThemes.filter((t) => normalizedThemes.includes(t));
       const score =
-        entry.weight + overlapCount(saintThemes, normalizedThemes) + liturgicalBoost(saint, liturgical);
+        entry.weight +
+        THEME_BOOST * overlapCount(saintThemes, normalizedThemes) +
+        liturgicalBoost(saint, liturgical);
       return { saint, sharedThemes, score };
     })
     .filter((row): row is { saint: Saint; sharedThemes: string[]; score: number } => Boolean(row))
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .map<SaintMatch>(({ saint, sharedThemes }) => ({
-      name: saint.name,
-      reason: `Selected for ${parsed.route.toLowerCase()} because of themes: ${
-        sharedThemes.join(", ") || saint.themes.slice(0, 2).join(", ")
-      }.`,
-      themes: sharedThemes.length ? sharedThemes : saint.themes.slice(0, 2),
-      feast_day: saint.feast_day,
-      prayer_reference: `Ask ${saint.name} to intercede for this intention.`,
-    }));
+    .map<SaintMatch>(({ saint, sharedThemes }) => {
+      const themeList = (sharedThemes.length ? sharedThemes : saint.themes.slice(0, 2)).map(
+        (t) => t.replace(/-/g, " "),
+      );
+      const themePhrase =
+        themeList.length === 0
+          ? "your season"
+          : themeList.length === 1
+            ? themeList[0]
+            : themeList.length === 2
+              ? `${themeList[0]} and ${themeList[1]}`
+              : `${themeList.slice(0, -1).join(", ")}, and ${themeList[themeList.length - 1]}`;
+      const reason = sharedThemes.length
+        ? `Walks with you through ${themePhrase}.`
+        : `Known for ${themePhrase}.`;
+      return {
+        id: saint.id,
+        name: saint.name,
+        reason,
+        themes: sharedThemes.length ? sharedThemes : saint.themes.slice(0, 2),
+        feast_day: saint.feast_day,
+        prayer_reference: `Ask ${saint.name} to intercede for this intention.`,
+        ...(saint.wikipedia_title ? { wikipedia_title: saint.wikipedia_title } : {}),
+      };
+    });
 
   return matchSaintsResponseSchema.parse({ saints: ranked }).saints;
 };
 
 export default async function handler(
-  req: { body: { route: RouteLabel; themes: string[] } },
+  req: { body: { route: RouteLabel; themes: string[]; exclude_ids?: string[] } },
   res: {
     status: (code: number) => { json: (payload: { saints: SaintMatch[] } | { error: string }) => void };
   },
 ): Promise<void> {
   try {
-    const list = await matchSaints(req.body.route, req.body.themes);
+    const list = await matchSaints(
+      req.body.route,
+      req.body.themes,
+      {},
+      req.body.exclude_ids ?? [],
+    );
     res.status(200).json({ saints: list });
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : "match-saints failed" });

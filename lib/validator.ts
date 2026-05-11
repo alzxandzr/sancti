@@ -22,16 +22,21 @@ export const classifierResultSchema = z.object({
 });
 
 export const saintMatchSchema = z.object({
+  id: z.string().min(1).optional(),
   name: z.string().min(1),
   reason: z.string().min(1),
   themes: z.array(z.string().min(1)).min(1),
   feast_day: z.string().min(1),
   prayer_reference: z.string().min(1),
+  wikipedia_title: z.string().min(1).optional(),
 });
 
 export const matchSaintsInputSchema = z.object({
   route: routeLabelSchema,
   themes: z.array(z.string().min(1)).min(1),
+  /** Optional list of saint ids to exclude — used by the "show me three more"
+   *  flow to surface fresh saints when the user wants different picks. */
+  exclude_ids: z.array(z.string().min(1)).max(20).optional(),
 });
 
 export const matchSaintsResponseSchema = z.object({
@@ -65,6 +70,11 @@ export const generatePlanInputSchema = z.object({
   route: routeLabelSchema,
   user_text: z.string().min(5).max(1500),
   saints: z.array(saintMatchSchema).min(1),
+  // Partial because callers send only the fields the user has set;
+  // the canonical userPreferencesSchema (defined below) requires all three.
+  preferences: z
+    .lazy(() => userPreferencesSchema.partial())
+    .optional(),
 });
 
 export const stateInLifeSchema = z.enum([

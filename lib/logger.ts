@@ -22,7 +22,7 @@ const REDACTED_KEYS: ReadonlyArray<string> = [
   "id_token",
   "refresh_token",
   "access_token",
-  "anthropic_api_key",
+  "gemini_api_key",
 ];
 
 const redact = (value: unknown, depth = 0): unknown => {

@@ -18,6 +18,10 @@ export interface Saint {
   keywords: string[];
   themes: string[];
   source_links: string[];
+  /** Wikipedia article slug, used to fetch the lead portrait via the
+   *  Wikipedia REST API (`/page/summary/{title}`). Optional so older
+   *  rows without it still validate. */
+  wikipedia_title?: string;
 }
 
 export interface Situation {
@@ -38,11 +42,17 @@ export interface ClassifierResult {
 }
 
 export interface SaintMatch {
+  /** Slug id from data/saints.json. Optional so legacy callers that hand-build
+   *  a SaintMatch (e.g. tests) still type-check. The match-saints handler
+   *  always populates it. */
+  id?: string;
   name: string;
   reason: string;
   themes: string[];
   feast_day: string;
   prayer_reference: string;
+  /** Wikipedia title for portrait lookup. Optional. */
+  wikipedia_title?: string;
 }
 
 export interface DevotionPrompt {

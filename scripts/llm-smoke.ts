@@ -1,12 +1,12 @@
 // Live cost-and-quality smoke for the LLM pipeline.
 // Run manually before every prompt change:
-//   ANTHROPIC_API_KEY=... npx tsx scripts/llm-smoke.ts
+//   GEMINI_API_KEY=... npx tsx scripts/llm-smoke.ts
 // Skipped automatically in CI when the secret is absent.
 //
 // Reports per-fixture: route, total_days, prompts, citations, latency,
 // observed cost in USD, and whether the safety path short-circuited (no
 // LLM call). Cost uses rough current public pricing — confirm at
-// https://anthropic.com/pricing before quoting numbers externally.
+// https://ai.google.dev/pricing before quoting numbers externally.
 
 import { classifyInput } from "../api/classify";
 import { matchSaints } from "../api/match-saints";
@@ -17,7 +17,8 @@ import {
   removeUsageObserver,
   type LLMUsage,
   type UsageObservation,
-} from "../lib/anthropic";
+} from "../lib/llm";
+import { isLlmConfigured } from "../lib/env";
 
 interface Fixture {
   label: string;
@@ -53,15 +54,17 @@ const FIXTURES: Fixture[] = [
 ];
 
 // Rough per-token public pricing (USD per million tokens). Cross-check at
-// https://anthropic.com/pricing before quoting numbers externally.
+// https://ai.google.dev/pricing before quoting numbers externally.
+// gemini-2.5-flash is currently free up to the daily/RPM limits of the
+// free tier; the paid-tier rates below are what kicks in if/when we exceed
+// the free quota.
 const PRICING: Record<string, { input: number; cached_read: number; cached_write: number; output: number }> = {
-  "claude-haiku-4-5": { input: 1, cached_read: 0.1, cached_write: 1.25, output: 5 },
-  "claude-haiku-4-5-20251001": { input: 1, cached_read: 0.1, cached_write: 1.25, output: 5 },
-  "claude-sonnet-4-6": { input: 3, cached_read: 0.3, cached_write: 3.75, output: 15 },
+  "gemini-2.5-flash": { input: 0.3, cached_read: 0.075, cached_write: 0.3, output: 2.5 },
+  "gemini-2.5-pro": { input: 1.25, cached_read: 0.3125, cached_write: 1.25, output: 10 },
 };
 
 const cost = (model: string, usage: LLMUsage): number => {
-  const p = PRICING[model] ?? { input: 3, cached_read: 0.3, cached_write: 3.75, output: 15 };
+  const p = PRICING[model] ?? PRICING["gemini-2.5-flash"];
   return (
     (usage.input_tokens * p.input +
       usage.cache_read_input_tokens * p.cached_read +
@@ -86,8 +89,8 @@ const ZERO_USAGE: LLMUsage = {
 };
 
 const main = async (): Promise<void> => {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("ANTHROPIC_API_KEY is not set; refusing to run live smoke.");
+  if (!isLlmConfigured()) {
+    console.error("GEMINI_API_KEY is not set (or too short); refusing to run live smoke.");
     process.exit(1);
   }
 
@@ -130,9 +133,7 @@ const main = async (): Promise<void> => {
       );
 
       // Cost for this fixture: re-price the cumulative usage at the dominant
-      // model. For mixed-model fixtures (classify+safety on Haiku, plan on
-      // Sonnet), this slight overestimate is acceptable for budgeting.
-      // The per-model breakdown at the end gives the exact picture.
+      // model. The per-model breakdown at the end gives the exact picture.
       const fixtureCost = cost(plan.primary_route === "SAFETY_REVIEW" ? models.safety : models.plan, fixtureUsage);
       total += fixtureCost;
 

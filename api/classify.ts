@@ -1,4 +1,5 @@
-import { callJSON, getModels } from "../lib/anthropic";
+import { callJSON, getModels } from "../lib/llm";
+import { isLlmConfigured } from "../lib/env";
 import { logger } from "../lib/logger";
 import {
   heuristicSafetyScan,
@@ -62,7 +63,7 @@ const fallbackKeywordClassify = (user_text: string): ClassifierResult => {
 export interface ClassifyContext {
   /** Optional Supabase user id; passed through to safety logs only. */
   user_id?: string | null;
-  /** Set true in tests to skip the LLM and use the keyword classifier. */
+  /** Set true in tests to skip the LLM and use the keyword classifier. When unset, the LLM is also skipped if `GEMINI_API_KEY` is not configured. */
   skipLLM?: boolean;
 }
 
@@ -108,7 +109,7 @@ export const classifyInput = async (
     };
   }
 
-  if (ctx.skipLLM) {
+  if (ctx.skipLLM || !isLlmConfigured()) {
     return {
       classification: fallbackKeywordClassify(parsed.user_text),
       safety: heuristic,

@@ -1,13 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { classifyInput } from "../api/classify";
-import { installFakeAnthropic, okJsonResponse, resetFakeAnthropic } from "./_helpers";
+import { __resetEnvCache } from "../lib/env";
+import { installFakeLlm, okJsonResponse, rawTextResponse, resetFakeLlm } from "./_helpers";
 
 test("classifyInput short-circuits to SAFETY_REVIEW on heuristic crisis without calling the LLM", async (t) => {
-  const handle = installFakeAnthropic(() =>
+  const handle = installFakeLlm(() =>
     okJsonResponse({ severity: "none", categories: [], reason: "ok" }),
   );
-  t.after(resetFakeAnthropic);
+  t.after(resetFakeLlm);
 
   const out = await classifyInput("I want to end my life. I can't keep going.");
 
@@ -21,7 +22,7 @@ test("classifyInput short-circuits to SAFETY_REVIEW when LLM pre-screen says con
   // Per prompts/safety.ts, concern means "a devotional plan alone would be
   // irresponsible without first surfacing crisis resources" (e.g., active
   // domestic violence). Both crisis AND concern must short-circuit.
-  const handle = installFakeAnthropic((params, i) => {
+  const handle = installFakeLlm((params, i) => {
     if (i === 0) {
       return okJsonResponse({
         severity: "concern",
@@ -31,7 +32,7 @@ test("classifyInput short-circuits to SAFETY_REVIEW when LLM pre-screen says con
     }
     return okJsonResponse({});
   });
-  t.after(resetFakeAnthropic);
+  t.after(resetFakeLlm);
 
   const out = await classifyInput(
     "My partner has been hitting me again and I don't know what to do. Should I just keep praying?",
@@ -44,7 +45,7 @@ test("classifyInput short-circuits to SAFETY_REVIEW when LLM pre-screen says con
 });
 
 test("classifyInput escalates to SAFETY_REVIEW when LLM pre-screen says crisis", async (t) => {
-  const handle = installFakeAnthropic((params, i) => {
+  const handle = installFakeLlm((params, i) => {
     if (i === 0) {
       return okJsonResponse({
         severity: "crisis",
@@ -54,7 +55,7 @@ test("classifyInput escalates to SAFETY_REVIEW when LLM pre-screen says crisis",
     }
     return okJsonResponse({});
   });
-  t.after(resetFakeAnthropic);
+  t.after(resetFakeLlm);
 
   // Phrasing that the heuristic does NOT match but the LLM should.
   const out = await classifyInput(
@@ -69,7 +70,7 @@ test("classifyInput escalates to SAFETY_REVIEW when LLM pre-screen says crisis",
 });
 
 test("classifyInput proceeds to classifier when pre-screen is none", async (t) => {
-  const handle = installFakeAnthropic((params, i) => {
+  const handle = installFakeLlm((params, i) => {
     if (i === 0) return okJsonResponse({ severity: "none", categories: [], reason: "ok" });
     return okJsonResponse({
       primary_route: "SUFFERING_HARDSHIP",
@@ -79,7 +80,7 @@ test("classifyInput proceeds to classifier when pre-screen is none", async (t) =
       needs_clarification: false,
     });
   });
-  t.after(resetFakeAnthropic);
+  t.after(resetFakeLlm);
 
   const out = await classifyInput("I am grieving the death of my father.");
 
@@ -90,12 +91,12 @@ test("classifyInput proceeds to classifier when pre-screen is none", async (t) =
 });
 
 test("classifyInput falls back to keyword classifier when LLM fails", async (t) => {
-  installFakeAnthropic((params, i) => {
+  installFakeLlm((_params, i) => {
     if (i === 0) return okJsonResponse({ severity: "none", categories: [], reason: "ok" });
     // Subsequent calls return garbage that fails schema, exhausting retries.
-    return { content: [{ type: "text" as const, text: "not json" }], usage: { input_tokens: 10, output_tokens: 5 } };
+    return rawTextResponse("not json");
   });
-  t.after(resetFakeAnthropic);
+  t.after(resetFakeLlm);
 
   const out = await classifyInput("My career feels meaningless and I am burned out.");
   assert.equal(out.used_fallback, true);
@@ -109,4 +110,19 @@ test("classifyInput with skipLLM uses keyword fallback directly", async () => {
   assert.equal(out.classification.primary_route, "VOCATION_DISCERNMENT");
   assert.equal(out.used_fallback, true);
   assert.equal(out.short_circuited, false);
+});
+
+test("classifyInput uses keyword classification when GEMINI_API_KEY is unset", async (t) => {
+  const prevKey = process.env.GEMINI_API_KEY;
+  t.after(() => {
+    if (prevKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = prevKey;
+    __resetEnvCache();
+  });
+  delete process.env.GEMINI_API_KEY;
+  __resetEnvCache();
+
+  const out = await classifyInput("My career feels meaningless and I am burned out at my job.");
+  assert.equal(out.used_fallback, true);
+  assert.equal(out.classification.primary_route, "WORK_PURPOSE");
 });

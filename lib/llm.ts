@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import type { z } from "zod";
 import { loadServerEnv } from "./env";
 import { logger } from "./logger";
@@ -7,39 +7,81 @@ import { sanitizeUserText } from "./validator";
 // ─── Client + model selection (lazy-initialized) ─────────────────────────
 // Lazy-init keeps the module importable in unit tests that never reach
 // `callJSON` (e.g., when only schemas / pure helpers are exercised). Tests
-// that DO need the client can call `setAnthropicClient` to inject a stub.
+// that DO need the client can call `__setLlmForTest` to inject a stub.
 
-let cachedClient: Anthropic | null = null;
-let cachedModels: { classify: string; safety: string; plan: string } | null = null;
+export interface LlmClient {
+  models: {
+    generateContent: (params: {
+      model: string;
+      contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
+      config: {
+        systemInstruction: { parts: Array<{ text: string }> };
+        responseMimeType: "application/json";
+        maxOutputTokens: number;
+        thinkingConfig?: { thinkingBudget: number };
+      };
+    }) => Promise<GeminiResponse>;
+  };
+}
 
-export const getAnthropicClient = (): Anthropic => {
+interface GeminiResponse {
+  text?: string;
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    cachedContentTokenCount?: number;
+  };
+}
+
+interface ModelMap {
+  classify: string;
+  safety: string;
+  plan: string;
+  planFallback: string;
+}
+
+let cachedClient: LlmClient | null = null;
+let cachedModels: ModelMap | null = null;
+
+export const getLlmClient = (): LlmClient => {
   if (cachedClient) return cachedClient;
   const env = loadServerEnv();
-  cachedClient = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  if (!env.GEMINI_API_KEY) {
+    throw new Error(
+      "GEMINI_API_KEY is not configured. Classification and plan routes skip the LLM when no key is set.",
+    );
+  }
+  cachedClient = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY }) as unknown as LlmClient;
   cachedModels = {
-    classify: env.ANTHROPIC_MODEL_CLASSIFY,
-    safety: env.ANTHROPIC_MODEL_SAFETY,
-    plan: env.ANTHROPIC_MODEL_PLAN,
+    classify: env.GEMINI_MODEL_CLASSIFY,
+    safety: env.GEMINI_MODEL_SAFETY,
+    plan: env.GEMINI_MODEL_PLAN,
+    planFallback: env.GEMINI_MODEL_PLAN_FALLBACK,
   };
   return cachedClient;
 };
 
-export const getModels = (): { classify: string; safety: string; plan: string } => {
+export const getModels = (): ModelMap => {
   if (cachedModels) return cachedModels;
-  getAnthropicClient();
+  getLlmClient();
   return cachedModels!;
 };
 
 // Test seam: inject a fake client + model map. Reset by passing nulls.
-export const __setAnthropicForTest = (
-  client: Anthropic | null,
-  models?: { classify: string; safety: string; plan: string } | null,
+export const __setLlmForTest = (
+  client: LlmClient | null,
+  models?: ModelMap | null,
 ): void => {
   cachedClient = client;
   cachedModels = models ?? null;
 };
 
 // ─── Usage tracking ──────────────────────────────────────────────────────
+// Normalized shape so the cost script and observers stay model-agnostic.
+// `cache_creation_input_tokens` is always 0 for Gemini (explicit cached
+// content is a separate API we don't currently use); `cache_read_input_tokens`
+// reflects `cachedContentTokenCount` when the request hits a cache.
 
 export interface LLMUsage {
   input_tokens: number;
@@ -62,17 +104,20 @@ const addUsage = (a: LLMUsage, b: LLMUsage): LLMUsage => ({
   cache_creation_input_tokens: a.cache_creation_input_tokens + b.cache_creation_input_tokens,
 });
 
-const usageFrom = (u: {
-  input_tokens?: number | null;
-  output_tokens?: number | null;
-  cache_read_input_tokens?: number | null;
-  cache_creation_input_tokens?: number | null;
-}): LLMUsage => ({
-  input_tokens: u.input_tokens ?? 0,
-  output_tokens: u.output_tokens ?? 0,
-  cache_read_input_tokens: u.cache_read_input_tokens ?? 0,
-  cache_creation_input_tokens: u.cache_creation_input_tokens ?? 0,
-});
+const usageFrom = (u: GeminiResponse["usageMetadata"]): LLMUsage => {
+  if (!u) return { ...ZERO_USAGE };
+  const cached = u.cachedContentTokenCount ?? 0;
+  const totalPrompt = u.promptTokenCount ?? 0;
+  // Gemini's promptTokenCount INCLUDES cachedContentTokenCount. Split them so
+  // input_tokens captures the non-cached portion (consistent with the
+  // smoke-script cost model that prices cached reads separately).
+  return {
+    input_tokens: Math.max(0, totalPrompt - cached),
+    output_tokens: u.candidatesTokenCount ?? 0,
+    cache_read_input_tokens: cached,
+    cache_creation_input_tokens: 0,
+  };
+};
 
 // ─── Usage observer (out-of-band cost tracking) ──────────────────────────
 // Production code never subscribes; the live smoke script subscribes once,
@@ -138,16 +183,23 @@ const extractJson = (text: string): unknown => {
   throw new Error("Model output did not contain parseable JSON.");
 };
 
-// ─── callJSON: structured Claude call with caching + retries + Zod ───────
+const responseText = (response: GeminiResponse): string | null => {
+  if (typeof response.text === "string") return response.text;
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  const text = parts.map((p) => p.text ?? "").join("");
+  return text.length > 0 ? text : null;
+};
+
+// ─── callJSON: structured Gemini call with retries + Zod ─────────────────
 
 export interface CallJSONOptions<T> {
   /** Model ID, e.g. `MODELS.classify`. */
   model: string;
   /**
-   * System blocks. Each becomes a TextBlockParam. When `cacheable` is true,
-   * the LAST block is marked `cache_control: ephemeral` — by convention put
-   * the largest stable content (base prompt + saints corpus) there to maximize
-   * cache reuse across calls.
+   * System blocks joined into Gemini's `systemInstruction`. Put the largest
+   * stable content (base prompt + saints corpus) last by convention; if we
+   * later wire up Gemini's explicit cached_content, that's the chunk we'd
+   * promote.
    */
   systemBlocks: string[];
   /** Untrusted user input. Will be sanitized + wrapped in <user_text>. */
@@ -156,15 +208,21 @@ export interface CallJSONOptions<T> {
   schema: z.ZodType<T>;
   /** Number of corrective retries after the first attempt. Default 2. */
   retries?: number;
-  /** Whether to mark the last system block ephemeral-cacheable. Default true. */
-  cacheable?: boolean;
   /** Output cap. Default 2048. */
   maxTokens?: number;
   /** Logging label (e.g. "classify", "safety", "plan"). */
   purpose: string;
   /** Optional user id for log correlation; redact via lib/logger. */
   userId?: string | null;
+  /** When primary model returns 429/RESOURCE_EXHAUSTED, retry once with this
+   *  model. Useful for plan generation where flash-lite has separate quota. */
+  fallbackModel?: string;
 }
+
+const isQuotaError = (err: unknown): boolean => {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /RESOURCE_EXHAUSTED|"code"\s*:\s*429|quota/i.test(msg);
+};
 
 export interface CallJSONResult<T> {
   data: T;
@@ -176,34 +234,25 @@ export interface CallJSONResult<T> {
 
 export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONResult<T>> => {
   const retries = opts.retries ?? 2;
-  const cacheable = opts.cacheable ?? true;
   const maxTokens = opts.maxTokens ?? 2048;
 
-  const baseSystem = opts.systemBlocks.map((text, i) => {
-    const block: { type: "text"; text: string; cache_control?: { type: "ephemeral" } } = {
-      type: "text",
-      text,
-    };
-    if (cacheable && i === opts.systemBlocks.length - 1) {
-      block.cache_control = { type: "ephemeral" };
-    }
-    return block;
-  });
+  const baseSystemParts = opts.systemBlocks.map((text) => ({ text }));
 
   const sanitizedUser = sanitizeUserText(opts.user);
   const wrappedUser = `<user_text>\n${sanitizedUser}\n</user_text>`;
 
-  const client = getAnthropicClient();
+  const client = getLlmClient();
   const t0 = Date.now();
   let cumulativeUsage: LLMUsage = { ...ZERO_USAGE };
   let lastError: string | null = null;
+  let activeModel = opts.model;
+  let fallbackUsed = false;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
-    const correctiveBlocks =
+    const correctiveParts =
       lastError !== null
         ? [
             {
-              type: "text" as const,
               text:
                 `Your previous response failed validation: ${lastError}\n` +
                 `Return JSON that matches the requested schema exactly. JSON only, no prose, no code fences.`,
@@ -211,38 +260,57 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
           ]
         : [];
 
-    let response;
+    let response: GeminiResponse;
     try {
-      response = await client.messages.create({
-        model: opts.model,
-        max_tokens: maxTokens,
-        system: [...baseSystem, ...correctiveBlocks],
-        messages: [{ role: "user", content: wrappedUser }],
+      response = await client.models.generateContent({
+        model: activeModel,
+        contents: [{ role: "user", parts: [{ text: wrappedUser }] }],
+        config: {
+          systemInstruction: { parts: [...baseSystemParts, ...correctiveParts] },
+          responseMimeType: "application/json",
+          maxOutputTokens: maxTokens,
+          // Disable Gemini 2.5's default "thinking" mode for structured-JSON
+          // calls: thinking tokens consume maxOutputTokens before the model
+          // emits any candidate text, which truncates the JSON. We don't need
+          // chain-of-thought for our schema-validated calls.
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       logger.error("llm_call_error", {
         purpose: opts.purpose,
-        model: opts.model,
+        model: activeModel,
         attempt,
         error: message,
       });
+      // Quota-exhaustion fallback: if primary model is rate-limited and a
+      // fallback was provided, switch and retry on the next loop iteration.
+      if (!fallbackUsed && opts.fallbackModel && isQuotaError(err)) {
+        fallbackUsed = true;
+        activeModel = opts.fallbackModel;
+        lastError = `primary model quota exhausted; retrying with ${opts.fallbackModel}`;
+        logger.warn("llm_quota_fallback", {
+          purpose: opts.purpose,
+          from: opts.model,
+          to: opts.fallbackModel,
+        });
+        continue;
+      }
       throw err;
     }
 
-    cumulativeUsage = addUsage(cumulativeUsage, usageFrom(response.usage));
+    cumulativeUsage = addUsage(cumulativeUsage, usageFrom(response.usageMetadata));
 
-    const textBlock = response.content.find(
-      (b): b is Extract<typeof b, { type: "text" }> => b.type === "text",
-    );
-    if (!textBlock || typeof textBlock.text !== "string") {
-      lastError = "no text content block returned";
+    const text = responseText(response);
+    if (text === null) {
+      lastError = "no text content returned";
       continue;
     }
 
     let parsed: unknown;
     try {
-      parsed = extractJson(textBlock.text);
+      parsed = extractJson(text);
     } catch (e) {
       lastError = e instanceof Error ? e.message : String(e);
       continue;
@@ -260,7 +328,7 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
     const latency_ms = Date.now() - t0;
     logger.info("llm_call", {
       purpose: opts.purpose,
-      model: opts.model,
+      model: activeModel,
       latency_ms,
       retries_used: attempt,
       ok: true,
@@ -270,7 +338,7 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
 
     notifyUsageObservers({
       purpose: opts.purpose,
-      model: opts.model,
+      model: activeModel,
       usage: cumulativeUsage,
       latency_ms,
       retries_used: attempt,
@@ -279,7 +347,7 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
     return {
       data: validated.data,
       usage: cumulativeUsage,
-      model: opts.model,
+      model: activeModel,
       latency_ms,
       retries_used: attempt,
     };
@@ -288,7 +356,7 @@ export const callJSON = async <T>(opts: CallJSONOptions<T>): Promise<CallJSONRes
   const latency_ms = Date.now() - t0;
   logger.error("llm_call_failed", {
     purpose: opts.purpose,
-    model: opts.model,
+    model: activeModel,
     latency_ms,
     retries_used: retries,
     last_error: lastError,

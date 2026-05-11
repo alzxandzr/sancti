@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildPlan } from "../api/generate-plan";
-import { installFakeAnthropic, okJsonResponse, resetFakeAnthropic } from "./_helpers";
+import { __resetEnvCache } from "../lib/env";
+import { installFakeLlm, okJsonResponse, resetFakeLlm } from "./_helpers";
 import type { DevotionPlanV2, SaintMatch } from "../types";
 
 const sampleSaints: SaintMatch[] = [
@@ -75,8 +76,8 @@ const validPlan = (): DevotionPlanV2 => ({
 });
 
 test("SAFETY_REVIEW route returns crisis-resources plan WITHOUT calling the LLM", async (t) => {
-  const handle = installFakeAnthropic(() => okJsonResponse({}));
-  t.after(resetFakeAnthropic);
+  const handle = installFakeLlm(() => okJsonResponse({}));
+  t.after(resetFakeLlm);
 
   const plan = await buildPlan("SAFETY_REVIEW", "I am in a really dark place right now.", sampleSaints, {
     locale: "en-US",
@@ -107,9 +108,24 @@ test("skipLLM returns the offline Psalm-23 fallback for non-safety routes", asyn
   }
 });
 
+test("buildPlan returns the offline Psalm-23 fallback when GEMINI_API_KEY is unset", async (t) => {
+  const prevKey = process.env.GEMINI_API_KEY;
+  t.after(() => {
+    if (prevKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = prevKey;
+    __resetEnvCache();
+  });
+  delete process.env.GEMINI_API_KEY;
+  __resetEnvCache();
+
+  const plan = await buildPlan("RELATIONSHIPS_FAMILY", "I need help forgiving a family member.", sampleSaints);
+  assert.equal(plan.primary_route, "RELATIONSHIPS_FAMILY");
+  assert.equal(plan.sources_used[0], "psalm_23_fallback");
+});
+
 test("valid LLM response passes both schema and post-validation", async (t) => {
-  installFakeAnthropic(() => okJsonResponse(validPlan()));
-  t.after(resetFakeAnthropic);
+  installFakeLlm(() => okJsonResponse(validPlan()));
+  t.after(resetFakeLlm);
 
   const plan = await buildPlan(
     "VOCATION_DISCERNMENT",
@@ -125,8 +141,8 @@ test("plan with banlist phrase falls back to safe content", async (t) => {
   const tainted = validPlan();
   tainted.days[0].prompts[1].body =
     "I absolve you from all your sins. Take, Lord, and receive all my liberty.";
-  installFakeAnthropic(() => okJsonResponse(tainted));
-  t.after(resetFakeAnthropic);
+  installFakeLlm(() => okJsonResponse(tainted));
+  t.after(resetFakeLlm);
 
   const plan = await buildPlan(
     "VOCATION_DISCERNMENT",
@@ -142,8 +158,8 @@ test("plan with fabricated catechism citation falls back", async (t) => {
   tainted.days[0].prompts[0].citations = [
     { kind: "catechism", paragraph: 9999, label: "fabricated" } as never,
   ];
-  installFakeAnthropic(() => okJsonResponse(tainted));
-  t.after(resetFakeAnthropic);
+  installFakeLlm(() => okJsonResponse(tainted));
+  t.after(resetFakeLlm);
 
   const plan = await buildPlan(
     "VOCATION_DISCERNMENT",
@@ -167,8 +183,8 @@ test("plan with citation referencing a global-corpus saint NOT in the per-call s
       label: "real saint, but not in this plan",
     },
   ];
-  installFakeAnthropic(() => okJsonResponse(tainted));
-  t.after(resetFakeAnthropic);
+  installFakeLlm(() => okJsonResponse(tainted));
+  t.after(resetFakeLlm);
 
   const plan = await buildPlan(
     "VOCATION_DISCERNMENT",
@@ -188,8 +204,8 @@ test("plan with unknown saint_writing citation falls back", async (t) => {
       label: "made up",
     },
   ];
-  installFakeAnthropic(() => okJsonResponse(tainted));
-  t.after(resetFakeAnthropic);
+  installFakeLlm(() => okJsonResponse(tainted));
+  t.after(resetFakeLlm);
 
   const plan = await buildPlan(
     "VOCATION_DISCERNMENT",

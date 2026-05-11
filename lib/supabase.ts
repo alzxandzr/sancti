@@ -20,6 +20,11 @@ export const getServiceSupabaseClient = (): SupabaseClient => {
   if (cachedServiceClient) return cachedServiceClient;
 
   const env = loadServerEnv();
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error(
+      "Supabase service client requested but SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured.",
+    );
+  }
   cachedServiceClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -30,7 +35,7 @@ export const getPublicSupabaseClient = (): SupabaseClient => {
   if (cachedPublicClient) return cachedPublicClient;
 
   const env = loadPublicEnv();
-  cachedPublicClient = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+  cachedPublicClient = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
   return cachedPublicClient;
 };
 

@@ -1,5 +1,6 @@
 import saintsData from "../data/saints.json";
-import { callJSON, getModels } from "../lib/anthropic";
+import { callJSON, getModels } from "../lib/llm";
+import { isLlmConfigured } from "../lib/env";
 import { CitationRejectedError, assertAllCitationsValid } from "../lib/citations";
 import { getTodayLiturgicalContext } from "../lib/liturgical";
 import { logger } from "../lib/logger";
@@ -187,8 +188,14 @@ export interface BuildPlanContext {
   user_id?: string | null;
   /** ISO locale for crisis-resource selection, e.g. "en-US". */
   locale?: string | null;
-  /** Set true in tests to skip the live LLM call. */
+  /** Set true in tests to skip the live LLM call. When unset, the LLM is also skipped if `GEMINI_API_KEY` is not configured. */
   skipLLM?: boolean;
+}
+
+export interface UserPreferencesInput {
+  state_in_life?: string;
+  preferred_tone?: string;
+  prayer_duration_minutes?: 5 | 10 | 15 | 20 | 30;
 }
 
 export const buildPlan = async (
@@ -196,8 +203,9 @@ export const buildPlan = async (
   user_text: string,
   saints: SaintMatch[],
   ctx: BuildPlanContext = {},
+  preferences?: UserPreferencesInput,
 ): Promise<DevotionPlanV2> => {
-  const parsed = generatePlanInputSchema.parse({ route, user_text, saints });
+  const parsed = generatePlanInputSchema.parse({ route, user_text, saints, preferences });
 
   // SAFETY_REVIEW never reaches the LLM.
   if (parsed.route === "SAFETY_REVIEW") {
@@ -205,27 +213,42 @@ export const buildPlan = async (
     return buildSafetyReviewPlan(parsed.user_text, parsed.saints, resources);
   }
 
-  if (ctx.skipLLM) {
-    // Used by integration tests that don't want the live API. Returns a
-    // minimal valid plan grounded in Psalm 23 + the first ranked saint.
+  if (ctx.skipLLM || !isLlmConfigured()) {
+    // Used when no API key is set, or in tests that don't want the live API.
+    // Returns a minimal valid plan grounded in Psalm 23 + the first ranked saint.
     return buildOfflineFallback(parsed.route, parsed.user_text, parsed.saints);
   }
 
   const liturgical = await getTodayLiturgicalContext().catch(() => null);
 
-  // System: base prompt + route prompt + allowlist block. Mark allowlist
-  // ephemeral-cacheable since saint sets repeat across users for popular
-  // routes; base + route are also stable so caching cumulatively is fine.
+  // System: base prompt + route prompt + allowlist block. Order is intentional
+  // (largest stable content last) so that if we later wire up Gemini's
+  // explicit cached_content API, the allowlist block is the natural cache key.
   const allowlist = buildAllowlistBlock(parsed.saints);
   const allowedSaintIds = buildAllowedSaintIdSet(parsed.saints);
   const liturgicalBlock = liturgical
     ? `Today is ${liturgical.date}: ${liturgical.celebration} (${liturgical.rank}). If a celebrated saint is in the saints list above, weave one brief reference to them.`
     : "Liturgical context unavailable for today; proceed without a liturgical reference.";
 
+  // Optional personalization knobs from the user's profile.
+  const prefBlock = (() => {
+    const p = (parsed.preferences ?? {}) as Partial<UserPreferencesInput>;
+    if (!p.state_in_life && !p.preferred_tone && !p.prayer_duration_minutes) return "";
+    const lines: string[] = ["User preferences (adapt the plan accordingly):"];
+    if (p.state_in_life) lines.push(`- state in life: ${p.state_in_life}`);
+    if (p.preferred_tone) lines.push(`- preferred tone: ${p.preferred_tone}`);
+    if (p.prayer_duration_minutes) {
+      lines.push(
+        `- target daily duration: ~${p.prayer_duration_minutes} minutes across all prompts combined`,
+      );
+    }
+    return lines.join("\n");
+  })();
+
   const systemBlocks = [
     baseSystemPrompt,
     ROUTE_TO_PROMPT[parsed.route],
-    `${allowlist}\n\n${liturgicalBlock}\n\nReturn JSON matching the DevotionPlanV2 schema: { primary_route, situation_summary, saint_matches, total_days (5..7), days[], safety_note (null on this route), content_label: "devotional_reflection", teaching_authority_note, pastoral_escalation: { should_escalate: false, suggestions: [] }, sources_used: [...] }. Each day has { day_index, theme, liturgical_note, prompts[] } where each prompt has { type, title, body, estimated_minutes, citations[] (≥1) }. Use day_index 0..N-1.`,
+    `${allowlist}\n\n${liturgicalBlock}${prefBlock ? "\n\n" + prefBlock : ""}\n\nReturn JSON matching the DevotionPlanV2 schema: { primary_route, situation_summary, saint_matches, total_days (5..7), days[], safety_note (null on this route), content_label: "devotional_reflection", teaching_authority_note, pastoral_escalation: { should_escalate: false, suggestions: [] }, sources_used: [...] }. Each day has { day_index, theme, liturgical_note, prompts[] } where each prompt has { type, title, body, estimated_minutes, citations[] (≥1) }. Use day_index 0..N-1.`,
   ];
 
   // Provide the user_text plus the saint slate (the LLM needs to know which
@@ -246,6 +269,7 @@ export const buildPlan = async (
   try {
     const result = await callJSON<DevotionPlanV2>({
       model: getModels().plan,
+      fallbackModel: getModels().planFallback,
       systemBlocks,
       user: userPayload,
       schema: devotionPlanV2Schema,
@@ -379,15 +403,22 @@ export default async function handler(
       saints: SaintMatch[];
       user_id?: string | null;
       locale?: string | null;
+      preferences?: UserPreferencesInput;
     };
   },
   res: { status: (code: number) => { json: (payload: DevotionPlanV2 | { error: string }) => void } },
 ): Promise<void> {
   try {
-    const plan = await buildPlan(req.body.route, req.body.user_text, req.body.saints, {
-      user_id: req.body.user_id ?? null,
-      locale: req.body.locale ?? null,
-    });
+    const plan = await buildPlan(
+      req.body.route,
+      req.body.user_text,
+      req.body.saints,
+      {
+        user_id: req.body.user_id ?? null,
+        locale: req.body.locale ?? null,
+      },
+      req.body.preferences,
+    );
     res.status(200).json(plan);
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : "plan generation failed" });
