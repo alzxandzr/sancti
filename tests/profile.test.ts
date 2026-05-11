@@ -8,7 +8,9 @@ import {
 } from "../lib/profile-store";
 import type { ClassifierResult } from "../types";
 
-const USER = "user-test-1";
+// profileActionSchema.user_id is z.string().uuid() at the API boundary, so
+// tests must use a real UUID. Hardcoded so failures are reproducible.
+const USER = "00000000-0000-0000-0000-000000000001";
 
 const sampleClassification: ClassifierResult = {
   primary_route: "SUFFERING_HARDSHIP",
