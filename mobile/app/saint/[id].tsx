@@ -315,7 +315,10 @@ export default function SaintProfileScreen() {
               style={{
                 fontFamily: theme.fonts.display.medium,
                 fontSize: 52,
-                lineHeight: 48,
+                // lineHeight must be >= fontSize or the top of the drop cap
+                // clips. 56 keeps the cap visually aligned with the first body
+                // line without truncating the glyph.
+                lineHeight: 56,
                 color: theme.brass,
                 paddingRight: 10,
                 paddingTop: 2,

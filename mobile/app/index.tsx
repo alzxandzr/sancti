@@ -127,7 +127,9 @@ export default function WelcomeScreen() {
             style={{
               fontFamily: theme.fonts.display.regular,
               fontSize: 72,
-              lineHeight: 76,
+              // Tight serifs at 72px need ~120% line-height or the cap ascender
+              // (the curl on the "S") clips above the line box on real devices.
+              lineHeight: 86,
               color: theme.ink,
               letterSpacing: -1,
             }}
