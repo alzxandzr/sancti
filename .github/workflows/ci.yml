@@ -30,7 +30,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Tests (mocked Anthropic)
+      - name: Tests (mocked LLM)
         run: npm test
 
       - name: Next.js build (smoke — no env required at compile time)
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
@@ -55,8 +55,8 @@ jobs:
       - name: Skip when secret is absent
         id: gate
         run: |
-          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
-            echo "ANTHROPIC_API_KEY not set; skipping live smoke."
+          if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "GEMINI_API_KEY not set; skipping live smoke."
             echo "should_run=false" >> $GITHUB_OUTPUT
           else
             echo "should_run=true" >> $GITHUB_OUTPUT
