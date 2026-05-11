@@ -33,6 +33,9 @@ jobs:
       - name: Tests (mocked Anthropic)
         run: npm test
 
+      - name: Next.js build (smoke — no env required at compile time)
+        run: npm run build
+
       - name: Lint (non-blocking until ESLint deps installed)
         run: npm run lint --if-present || true
 

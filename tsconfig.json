@@ -1,15 +1,43 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "Preserve",
     "moduleResolution": "Bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "strict": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "allowJs": true,
     "skipLibCheck": true,
-    "jsx": "preserve",
+    "isolatedModules": true,
+    "incremental": true,
+    "jsx": "react-jsx",
     "noEmit": true,
-    "types": ["node"]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["app", "api", "lib", "prompts", "scripts", "tests", "types"]
+  "include": [
+    "next-env.d.ts",
+    "api",
+    "data",
+    "lib",
+    "pages",
+    "prompts",
+    "scripts",
+    "tests",
+    "types",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "mobile",
+    ".next"
+  ]
 }
