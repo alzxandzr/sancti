@@ -1216,5 +1216,19 @@
     "themes": ["work", "vocation", "daily-faithfulness"],
     "wikipedia_title": "Josemar%C3%ADa_Escriv%C3%A1",
     "source_links": ["https://www.vatican.va/news_services/liturgy/saints/ns_lit_doc_20021006_escriva-de-balaguer_en.html", "https://en.wikipedia.org/wiki/Josemar%C3%ADa_Escriv%C3%A1"]
+  },
+  {
+    "id": "st-mary-magdalene",
+    "name": "St. Mary Magdalene",
+    "title": "Apostle to the Apostles",
+    "feast_day": "July 22",
+    "era": "1st century",
+    "short_bio": "St. Mary Magdalene followed Jesus from Galilee and stood near the cross at his death. She was the first to encounter the risen Christ at the tomb and was sent by him to announce the Resurrection to the apostles.",
+    "patronages": ["penitents", "converts", "contemplatives", "those falsely accused"],
+    "virtues": ["devotion", "perseverance", "fortitude"],
+    "keywords": ["grief", "conversion", "witness", "presence", "resurrection"],
+    "themes": ["grief", "conversion", "contemplation", "trust"],
+    "wikipedia_title": "Mary_Magdalene",
+    "source_links": ["https://www.vatican.va/roman_curia/congregations/ccdds/documents/rc_con_ccdds_doc_20160603_decreto-mariamaddalena_en.html", "https://en.wikipedia.org/wiki/Mary_Magdalene"]
   }
 ]

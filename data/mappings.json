@@ -106,5 +106,8 @@
   {"saint_id":"st-maria-goretti","route":"SAFETY_REVIEW","themes":["forgiveness","mercy","dignity"],"weight":72},
   {"saint_id":"st-mother-teresa","route":"SAFETY_REVIEW","themes":["presence","accompaniment","dignity"],"weight":80},
   {"saint_id":"st-jude","route":"SAFETY_REVIEW","themes":["hope","desperate-cases","accompaniment"],"weight":78},
-  {"saint_id":"st-matt-talbot","route":"SAFETY_REVIEW","themes":["recovery","accompaniment","hope"],"weight":80}
+  {"saint_id":"st-matt-talbot","route":"SAFETY_REVIEW","themes":["recovery","accompaniment","hope"],"weight":80},
+  {"saint_id":"st-mary-magdalene","route":"SUFFERING_HARDSHIP","themes":["grief","presence","hope"],"weight":88},
+  {"saint_id":"st-mary-magdalene","route":"VOCATION_DISCERNMENT","themes":["conversion","calling","witness"],"weight":78},
+  {"saint_id":"st-mary-magdalene","route":"GENERAL_GUIDANCE","themes":["devotion","contemplation","trust"],"weight":76}
 ]
