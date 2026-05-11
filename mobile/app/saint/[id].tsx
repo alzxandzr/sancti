@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BackButton } from "../../components/BackButton";
@@ -37,9 +37,19 @@ const shortName = (full: string): string => {
 export default function SaintProfileScreen() {
   const { theme } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams() as { id?: string };
   const id = params.id ?? "";
   const { classification, generatePlan, seedFromSaint, stage } = useSession();
+
+  // Applied to every top-level container instead of wrapping in SafeAreaView.
+  const shellStyle = {
+    flex: 1,
+    backgroundColor: theme.bg,
+    paddingTop: insets.top,
+    paddingLeft: insets.left,
+    paddingRight: insets.right,
+  } as const;
 
   const [saint, setSaint] = useState<Saint | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -128,20 +138,20 @@ export default function SaintProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
+      <View style={shellStyle}>
         <View style={{ padding: 22 }}>
           <BackButton />
         </View>
         <View style={{ marginTop: 80, alignItems: "center" }}>
           <ActivityIndicator color={theme.brass} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error || !saint) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
+      <View style={shellStyle}>
         <View style={{ padding: 22 }}>
           <BackButton />
         </View>
@@ -160,14 +170,14 @@ export default function SaintProfileScreen() {
             {error ?? `Saint '${id}' not found.`}
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
+    <View style={shellStyle}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 140 }}
+        contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
         keyboardShouldPersistTaps="handled"
       >
         <View
@@ -474,6 +484,6 @@ export default function SaintProfileScreen() {
           style={{ opacity: planning ? 0.6 : 1 }}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

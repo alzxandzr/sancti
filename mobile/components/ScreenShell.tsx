@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/ThemeProvider";
 
 interface Props {
@@ -13,8 +13,14 @@ interface Props {
 // Top-level wrapper for every screen. Applies the theme bg, padding, and a
 // faint paper-texture wash (two overlapping radial-ish gradients done as
 // translucent View blobs since RN doesn't ship CSS gradients out of the box).
+//
+// Reads safe-area insets explicitly (via useSafeAreaInsets) and applies them
+// as padding rather than wrapping in SafeAreaView. The SafeAreaView component
+// can mis-apply insets on physical devices under New Arch + SDK 54, leaving
+// content under the notch/status bar.
 export const ScreenShell = ({ children, pad = 24, scroll = true }: Props) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const inner = (
     <View
@@ -29,7 +35,15 @@ export const ScreenShell = ({ children, pad = 24, scroll = true }: Props) => {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: theme.bg,
+        paddingTop: insets.top,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+      }}
+    >
       {/* Paper-texture wash. In Cloister, warm brass highlight top-left + faint
           ink shadow bottom-right; in Vespers, candlelit brass top + cardinal
           warmth at the bottom. Approximated with two soft circles. */}
@@ -63,14 +77,14 @@ export const ScreenShell = ({ children, pad = 24, scroll = true }: Props) => {
       </View>
       {scroll ? (
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom }}
           keyboardShouldPersistTaps="handled"
         >
           {inner}
         </ScrollView>
       ) : (
-        inner
+        <View style={{ flex: 1, paddingBottom: insets.bottom }}>{inner}</View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
