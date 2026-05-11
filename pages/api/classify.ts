@@ -1,1 +1,1 @@
-export { default } from "../../api/classify";
+export { default } from "../../handlers/classify";

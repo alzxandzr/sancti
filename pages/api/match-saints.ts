@@ -1,1 +1,1 @@
-export { default } from "../../api/match-saints";
+export { default } from "../../handlers/match-saints";

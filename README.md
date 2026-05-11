@@ -14,7 +14,7 @@ The repo is structured as a Next.js web app at the root (deployable to Vercel) p
 
 ## Folder Structure
 - `pages/` — Next.js routes (landing page + thin `pages/api/*` re-exports)
-- `api/` — API handler bodies (kept here while we delay an App Router migration)
+- `handlers/` — API handler bodies (kept outside `pages/api/` so Vercel doesn't auto-detect them as standalone serverless functions alongside the Next.js routes)
 - `lib/` — shared clients, validator, safety, citations, env loader
 - `prompts/` — base prompt, classifier prompt, route prompts
 - `data/` — saints, situations, mappings, scripture books, crisis resources

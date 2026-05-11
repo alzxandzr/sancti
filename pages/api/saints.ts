@@ -1,1 +1,1 @@
-export { default } from "../../api/saints";
+export { default } from "../../handlers/saints";

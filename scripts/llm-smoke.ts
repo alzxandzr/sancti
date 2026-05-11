@@ -8,9 +8,9 @@
 // LLM call). Cost uses rough current public pricing — confirm at
 // https://ai.google.dev/pricing before quoting numbers externally.
 
-import { classifyInput } from "../api/classify";
-import { matchSaints } from "../api/match-saints";
-import { buildPlan } from "../api/generate-plan";
+import { classifyInput } from "../handlers/classify";
+import { matchSaints } from "../handlers/match-saints";
+import { buildPlan } from "../handlers/generate-plan";
 import {
   addUsageObserver,
   getModels,

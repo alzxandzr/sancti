@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyInput } from "../api/classify";
+import { classifyInput } from "../handlers/classify";
 import { __resetEnvCache } from "../lib/env";
 import { installFakeLlm, okJsonResponse, rawTextResponse, resetFakeLlm } from "./_helpers";
 

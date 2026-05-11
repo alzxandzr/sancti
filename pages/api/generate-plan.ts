@@ -1,1 +1,1 @@
-export { default } from "../../api/generate-plan";
+export { default } from "../../handlers/generate-plan";

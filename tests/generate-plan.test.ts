@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildPlan } from "../api/generate-plan";
+import { buildPlan } from "../handlers/generate-plan";
 import { __resetEnvCache } from "../lib/env";
 import { installFakeLlm, okJsonResponse, resetFakeLlm } from "./_helpers";
 import type { DevotionPlanV2, SaintMatch } from "../types";

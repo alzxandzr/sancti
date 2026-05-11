@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyProfileAction } from "../api/profile";
+import { applyProfileAction } from "../handlers/profile";
 import {
   InMemoryProfileStore,
   __resetProfileStoreForTest,
