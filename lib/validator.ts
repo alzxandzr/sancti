@@ -141,21 +141,21 @@ export const userProfileSchema = z.object({
 export const profileActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("get_profile"),
-    user_id: z.string().min(1),
+    user_id: z.string().uuid(),
   }),
   z.object({
     action: z.literal("upsert_profile"),
-    user_id: z.string().min(1),
+    user_id: z.string().uuid(),
     preferences: userPreferencesSchema,
   }),
   z.object({
     action: z.literal("save_saint"),
-    user_id: z.string().min(1),
+    user_id: z.string().uuid(),
     saint_id: z.string().min(1),
   }),
   z.object({
     action: z.literal("save_plan"),
-    user_id: z.string().min(1),
+    user_id: z.string().uuid(),
     plan_id: z.string().min(1),
     primary_route: routeLabelSchema,
     day_count: z.number().int().min(3).max(7),
@@ -164,7 +164,7 @@ export const profileActionSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("mark_plan_day_complete"),
-    user_id: z.string().min(1),
+    user_id: z.string().uuid(),
     plan_id: z.string().min(1),
   }),
 ]);
