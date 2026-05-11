@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FAF7F2"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "app.sancti.mobile",
       "supportsTablet": true,
@@ -32,7 +34,9 @@
       "expo-router",
       "expo-splash-screen",
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-font",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
