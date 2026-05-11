@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 import { useAppFonts } from "../theme/fonts";
 import { SessionProvider } from "../lib/session";
@@ -42,11 +43,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <StatusBarFollowingTheme />
-      <SessionProvider>
-        <Slot />
-      </SessionProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <StatusBarFollowingTheme />
+        <SessionProvider>
+          <Slot />
+        </SessionProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
