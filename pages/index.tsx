@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import React, { useState } from "react";
 import type { FormEvent, CSSProperties, ReactNode } from "react";
 import type {
@@ -8,6 +9,7 @@ import type {
   SafetyPrescreen,
   SaintMatch,
 } from "../types";
+import { saveActivePlan } from "../lib/web/active-plan";
 
 interface ClassifyOutcome {
   classification: ClassifierResult;
@@ -124,6 +126,12 @@ export default function Home() {
       });
       setPlan(planResp);
       setStage("done");
+
+      // Persist the plan to Supabase (or localStorage if anon auth is off) so
+      // the user can resume it from the Today page across sessions.
+      void saveActivePlan(planResp).catch((err) => {
+        console.warn("Could not save plan; ephemeral session only:", err);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStage("error");
@@ -324,6 +332,15 @@ export default function Home() {
               <em style={brassItalic}>reflection.</em>
             </h2>
             <p style={mutedSerifStyle}>{plan.situation_summary}</p>
+
+            <div style={{ marginTop: 18, marginBottom: 8 }}>
+              <Link href="/today" style={ctaLinkStyle}>
+                Begin day i in <em style={brassItalic}>Today</em> →
+              </Link>
+              <p style={{ ...mutedSerifStyle, fontSize: 13, marginTop: 6 }}>
+                Your plan is saved. Open it day by day, or read it all below.
+              </p>
+            </div>
 
             {plan.safety_note && (
               <div style={safetyNoteStyle}>
@@ -609,6 +626,18 @@ const cardStyle: CSSProperties = {
   border: "1px solid var(--hairline)",
   borderRadius: 18,
   padding: "28px 28px 30px",
+};
+
+const ctaLinkStyle: CSSProperties = {
+  display: "inline-block",
+  fontFamily: "var(--font-display)",
+  fontSize: "1.25rem",
+  color: "var(--brass-deep)",
+  textDecoration: "none",
+  padding: "10px 18px",
+  border: "1px solid var(--brass)",
+  borderRadius: 999,
+  background: "rgba(168,130,58,0.06)",
 };
 
 const displayHeadingStyle: CSSProperties = {
