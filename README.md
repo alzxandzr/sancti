@@ -44,38 +44,36 @@ The landing page at `/` posts to `/api/classify → /api/match-saints → /api/g
    - `GEMINI_API_KEY` *(required — free tier key from https://aistudio.google.com/apikey)*
    - `SUPABASE_URL` *(enables profile persistence; if absent the profile route uses an in-memory store)*
    - `SUPABASE_SERVICE_ROLE_KEY` *(required when `SUPABASE_URL` is set)*
-   - `GEMINI_MODEL_CLASSIFY`, `GEMINI_MODEL_SAFETY`, `GEMINI_MODEL_PLAN` *(optional — pin a model revision)*
+   - `GEMINI_MODEL_CLASSIFY`, `GEMINI_MODEL_SAFETY`, `GEMINI_MODEL_PLAN`, `GEMINI_MODEL_PLAN_FALLBACK` *(optional — pin a model revision; the fallback is used when the primary plan model returns 429)*
    - `LITCAL_API_BASE` *(optional — overrides the default LiturgicalCalendarAPI)*
    - `SENTRY_DSN`, `POSTHOG_API_KEY` *(optional, observability)*
    - `LOG_LEVEL` *(optional, default `info`)*
 3. The `EXPO_PUBLIC_*` values are for the **mobile** build only; the Vercel web deploy does not need them.
-4. Push to `main`; Vercel runs `npm run build`. The build log will list four dynamic `/api/*` routes plus the static landing page.
+4. Push to `main`; Vercel runs `npm run build`. The build log will list the seven dynamic `/api/*` routes plus the static `/` and `/today` pages.
 
 ### Supabase migration
 
-To enable real profile persistence, deploy the schema in `supabase/migrations/0001_init.sql` against your Supabase project. Either run it from the Supabase SQL editor or, with the Supabase CLI:
+To enable profile persistence and per-user reads/writes, run all migrations in `supabase/migrations/` against your Supabase project. Either paste them in order from the Supabase SQL editor or use the Supabase CLI:
 
 ```bash
 supabase db push
 ```
 
-RLS is enabled on every user-scoped table; service-role writes from the API routes bypass RLS as expected.
+Current migrations:
+- `0001_init.sql` — schema (11 tables) + RLS policies + auth trigger
+- `0002_service_role_grants.sql` — table-level grants so server-side `service_role` writes succeed (RLS bypass alone is not enough without the grant)
+- `0003_authenticated_grants.sql` — grants for the `authenticated` role so the mobile client can read/write its own rows directly with the publishable key (RLS still enforces `auth.uid() = user_id`)
 
-## Rate limiting / abuse note
+## Rate limiting
 
-The `/api/classify` and `/api/generate-plan` routes call Gemini. The free tier has generous per-day limits but you can still get charged once you exceed them and there is no rate-limiting middleware in this repo yet — for a public deploy you should at minimum:
-
-- Add a per-IP token bucket (e.g. `@upstash/ratelimit` + Upstash Redis, or Vercel's edge rate-limit rules).
-- Or require a demo API key header on expensive routes and rotate it.
-
-Tracking this as a Phase-5 hardening task.
+`middleware.ts` applies a per-IP token bucket (8/min, burst 8) to `/api/classify` and `/api/generate-plan`. The bucket is in-memory, so it resets on serverless cold start — that is enough as a basic abuse shield. Swapping in an Upstash-Redis-backed bucket is the Phase-5 upgrade path.
 
 ## Environment Variables
 
 Server-side (Next.js API routes / EAS build — never bundled into mobile):
 
 - `GEMINI_API_KEY` — optional locally (falls back to keyword classification + Psalm 23 plan)
-- `GEMINI_MODEL_CLASSIFY` / `GEMINI_MODEL_SAFETY` / `GEMINI_MODEL_PLAN` — override defaults in `lib/env.ts`
+- `GEMINI_MODEL_CLASSIFY` / `GEMINI_MODEL_SAFETY` / `GEMINI_MODEL_PLAN` / `GEMINI_MODEL_PLAN_FALLBACK` — override defaults in `lib/env.ts`
 - `SUPABASE_URL` — optional; profile route uses in-memory store when unset
 - `SUPABASE_SERVICE_ROLE_KEY` — required when `SUPABASE_URL` is set
 - `LITCAL_API_BASE` — defaults to LiturgicalCalendarAPI
