@@ -33,3 +33,4 @@ supabase/.branches/
 .claude/
 .agents/
 skills-lock.json
+.vercel
