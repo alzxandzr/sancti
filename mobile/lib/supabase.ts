@@ -1,26 +1,40 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-if (!url || !key) {
-  throw new Error(
-    "EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set. " +
-      "Add them to mobile/.env.local and restart Expo.",
-  );
-}
+// AsyncStorage touches `window` at module load, which crashes during Expo's
+// Node-side static render. On the server we hand supabase-js no storage and
+// let it use its built-in memory shim; the browser path still gets persistent
+// AsyncStorage so the anonymous session survives reloads.
+const isBrowser = typeof window !== "undefined";
 
-// One shared client for the whole app. AsyncStorage backs session
-// persistence so the anonymous user-id survives app reloads.
-export const supabase = createClient(url, key, {
-  auth: {
-    storage: AsyncStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-  },
-});
+// Build a stub that defers the env-missing error until a property is actually
+// accessed. The static-render pass loads this module but never calls a
+// method on it — if we threw at module load, every Expo export -p web build
+// without local .env would fail.
+const makeMissingEnvStub = (): SupabaseClient =>
+  new Proxy({} as SupabaseClient, {
+    get() {
+      throw new Error(
+        "EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set. " +
+          "Add them to mobile/.env.local (dev) or the Vercel project env (prod) and restart.",
+      );
+    },
+  });
+
+export const supabase: SupabaseClient =
+  url && key
+    ? createClient(url, key, {
+        auth: {
+          storage: isBrowser ? AsyncStorage : undefined,
+          persistSession: isBrowser,
+          autoRefreshToken: isBrowser,
+          detectSessionInUrl: false,
+        },
+      })
+    : makeMissingEnvStub();
 
 /**
  * Ensure the device has an authenticated user. We use Supabase anonymous

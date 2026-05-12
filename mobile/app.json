@@ -21,6 +21,10 @@
     "android": {
       "package": "app.sancti.mobile"
     },
+    "web": {
+      "bundler": "metro",
+      "output": "server"
+    },
     "plugins": [
       "expo-router",
       "expo-splash-screen",
