@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyProfileAction } from "../handlers/profile";
+import { applyProfileAction } from "../server/handlers/profile";
 import {
   InMemoryProfileStore,
   __resetProfileStoreForTest,
   __setProfileStoreForTest,
-} from "../lib/profile-store";
-import type { ClassifierResult } from "../types";
+} from "../server/lib/profile-store";
+import type { ClassifierResult } from "../server/types";
 
 // profileActionSchema.user_id is z.string().uuid() at the API boundary, so
 // tests must use a real UUID. Hardcoded so failures are reproducible.

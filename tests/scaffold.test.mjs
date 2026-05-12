@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const saints = JSON.parse(readFileSync(resolve(here, '../data/saints.json'), 'utf8'));
-const situations = JSON.parse(readFileSync(resolve(here, '../data/situations.json'), 'utf8'));
+const saints = JSON.parse(readFileSync(resolve(here, '../server/data/saints.json'), 'utf8'));
+const situations = JSON.parse(readFileSync(resolve(here, '../server/data/situations.json'), 'utf8'));
 
 test('seed data meets minimum counts', () => {
   assert.ok(Array.isArray(saints));

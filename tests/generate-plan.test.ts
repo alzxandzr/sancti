@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildPlan } from "../handlers/generate-plan";
-import { __resetEnvCache } from "../lib/env";
+import { buildPlan } from "../server/handlers/generate-plan";
+import { __resetEnvCache } from "../server/lib/env";
 import { installFakeLlm, okJsonResponse, resetFakeLlm } from "./_helpers";
-import type { DevotionPlanV2, SaintMatch } from "../types";
+import type { DevotionPlanV2, SaintMatch } from "../server/types";
 
 const sampleSaints: SaintMatch[] = [
   {

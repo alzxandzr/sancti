@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { crisisResourcesForLocale, heuristicSafetyScan } from "../lib/safety";
+import { crisisResourcesForLocale, heuristicSafetyScan } from "../server/lib/safety";
 
 test("heuristicSafetyScan reason field never includes the verbatim user phrase", () => {
   // PII: heuristic reason flows into recordSafetyEvent and is logged/persisted.

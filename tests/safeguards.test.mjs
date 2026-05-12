@@ -12,12 +12,12 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (rel) => readFileSync(resolve(here, rel), 'utf8');
 
-const validatorSrc = read('../lib/validator.ts');
-const safetySrc = read('../lib/safety.ts');
-const citationsSrc = read('../lib/citations.ts');
-const baseSrc = read('../prompts/base.ts');
-const safetyPromptSrc = read('../prompts/safety.ts');
-const classifierSrc = read('../prompts/classifier.ts');
+const validatorSrc = read('../server/lib/validator.ts');
+const safetySrc = read('../server/lib/safety.ts');
+const citationsSrc = read('../server/lib/citations.ts');
+const baseSrc = read('../server/prompts/base.ts');
+const safetyPromptSrc = read('../server/prompts/safety.ts');
+const classifierSrc = read('../server/prompts/classifier.ts');
 
 test('output banlist still includes core impersonation triggers', () => {
   for (const phrase of [

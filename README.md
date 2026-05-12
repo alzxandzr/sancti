@@ -2,90 +2,86 @@
 
 Sancti is a Catholic saint-matching and devotional planning app. Users describe their current life situation, Sancti classifies intent into a pastoral route, suggests relevant saints, and creates a personalized 5–7 day devotional reflection plan — with theological and safety guardrails.
 
-The repo is structured as a Next.js web app at the root (deployable to Vercel) plus a sibling Expo mobile app under `mobile/`. Both share the same `lib/`, `prompts/`, `data/`, and `types/`.
+The whole project is a single Expo Router app: the same codebase ships to web (Vercel), iOS, and Android. API routes are co-located in `app/api/` and execute as serverless functions in production.
 
 ## Tech Stack
-- **Web:** Next.js (Pages Router), React, TypeScript
-- **Mobile:** React Native with Expo (TypeScript) — under `mobile/`
+
+- **Frontend (web + native):** Expo Router 6 + React Native + react-native-web
+- **API routes:** Expo Router `+api.ts` files, deployed as Vercel Functions via `@expo/server/adapter/vercel`
 - **Database:** Supabase (Postgres, pgvector-ready)
-- **AI:** Google Gemini API (`@google/genai`)
+- **AI:** Google Gemini (`@google/genai`)
 - **Liturgical Calendar:** LiturgicalCalendarAPI
 - **Validation:** Zod
 
 ## Folder Structure
-- `pages/` — Next.js routes (landing page + thin `pages/api/*` re-exports)
-- `handlers/` — API handler bodies (kept outside `pages/api/` so Vercel doesn't auto-detect them as standalone serverless functions alongside the Next.js routes)
-- `lib/` — shared clients, validator, safety, citations, env loader
-- `prompts/` — base prompt, classifier prompt, route prompts
-- `data/` — saints, situations, mappings, scripture books, crisis resources
-- `types/` — shared TypeScript types
-- `supabase/migrations/` — SQL migrations (see Deploy section)
+
+- `app/` — Expo Router screens (web + native). `app/api/*+api.ts` are server routes.
+- `api/` — Single Vercel Function entry that fronts Expo Router (`@expo/server/adapter/vercel`).
+- `server/` — Server-only code, imported by `app/api/*+api.ts`:
+  - `server/handlers/` — handler bodies (classify, generate-plan, match-saints, profile, saint, saints, liturgical)
+  - `server/lib/` — Gemini client, validator, safety, citations, env loader, rate limiter, Next-style adapter
+  - `server/prompts/` — base + classifier + per-route system prompts
+  - `server/data/` — saints, mappings, situations, scripture books, crisis resources (static JSON)
+  - `server/types/` — shared TypeScript contracts
+- `components/`, `theme/` — UI primitives shared by every screen
+- `lib/` — client-side utilities (api wrapper, supabase client, profile/journal/saved-saints persistence)
 - `tests/` — `tsx --test` suite (mocked Gemini SDK)
-- `mobile/` — Expo client (its own `package.json`; not part of the web deploy)
+- `scripts/llm-smoke.ts` — live smoke for the LLM pipeline (run manually with a real `GEMINI_API_KEY`)
+- `supabase/migrations/` — SQL migrations
 
 ## Local Development
+
 ```bash
 npm install
-# Create .env.local (gitignored) with at minimum GEMINI_API_KEY.
-# Optional: SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY for profile persistence,
-# and EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY for the
-# mobile bundle. See "Environment Variables" below.
-npm run dev                # http://localhost:3000
+# Create .env.local (gitignored). At minimum:
+#   EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY for the client
+#   GEMINI_API_KEY + SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY for the API routes
+# See .env.example.
+
+npm run web        # web dev server (http://localhost:8081)
+npm start          # Metro dev server for native (iOS/Android via Expo Go)
 npm run typecheck
 npm test
 ```
 
-The landing page at `/` posts to `/api/classify → /api/match-saints → /api/generate-plan` for an end-to-end demo.
+## Deploy
 
-## Deploy to Vercel
+Web + API land in a single Vercel project. The repo root IS the project root — no monorepo, no nested deploy directory.
 
-1. Push the repo to GitHub and "Add New… → Project" in Vercel. Pick the repo; the framework preset auto-detects as Next.js.
-2. Configure environment variables (Project Settings → Environment Variables). These are server-only — never expose to the browser:
-   - `GEMINI_API_KEY` *(required — free tier key from https://aistudio.google.com/apikey)*
-   - `SUPABASE_URL` *(enables profile persistence; if absent the profile route uses an in-memory store)*
-   - `SUPABASE_SERVICE_ROLE_KEY` *(required when `SUPABASE_URL` is set)*
-   - `GEMINI_MODEL_CLASSIFY`, `GEMINI_MODEL_SAFETY`, `GEMINI_MODEL_PLAN`, `GEMINI_MODEL_PLAN_FALLBACK` *(optional — pin a model revision; the fallback is used when the primary plan model returns 429)*
-   - `LITCAL_API_BASE` *(optional — overrides the default LiturgicalCalendarAPI)*
-   - `SENTRY_DSN`, `POSTHOG_API_KEY` *(optional, observability)*
-   - `LOG_LEVEL` *(optional, default `info`)*
-3. The `EXPO_PUBLIC_*` values are for the **mobile** build only; the Vercel web deploy does not need them.
-4. Push to `main`; Vercel runs `npm run build`. The build log will list the seven dynamic `/api/*` routes plus the static `/` and `/today` pages.
+1. Push the repo to GitHub and link it in Vercel (or `vercel link` from the repo root).
+2. Configure environment variables (Project Settings → Environment Variables). Server-only values must never be exposed to the client:
+   - `GEMINI_API_KEY` *(required for live LLM calls; routes degrade to keyword fallback when absent)*
+   - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` *(profile persistence; profile route uses in-memory store when absent)*
+   - `GEMINI_MODEL_CLASSIFY`, `GEMINI_MODEL_SAFETY`, `GEMINI_MODEL_PLAN`, `GEMINI_MODEL_PLAN_FALLBACK` *(optional model pins)*
+   - `LITCAL_API_BASE` *(optional)*
+   - `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` *(client-side Supabase access)*
+   - `SENTRY_DSN`, `POSTHOG_API_KEY`, `LOG_LEVEL` *(optional)*
+3. Push to `main`. Vercel runs `expo export -p web` (per `vercel.json`), produces `dist/client` for static assets, and registers a single Function at `api/index.ts` that dispatches every request through the Expo Router server build in `dist/server`.
+
+### Mobile (iOS / Android)
+
+Builds run through EAS (`eas.json` already configured). The native app talks to the same API as the web — point `EXPO_PUBLIC_API_BASE_URL` at the deployed Vercel URL.
 
 ### Supabase migration
 
-To enable profile persistence and per-user reads/writes, run all migrations in `supabase/migrations/` against your Supabase project. Either paste them in order from the Supabase SQL editor or use the Supabase CLI:
+Apply migrations against your Supabase project (Supabase SQL editor or `supabase db push`):
 
-```bash
-supabase db push
-```
-
-Current migrations:
-- `0001_init.sql` — schema (11 tables) + RLS policies + auth trigger
-- `0002_service_role_grants.sql` — table-level grants so server-side `service_role` writes succeed (RLS bypass alone is not enough without the grant)
-- `0003_authenticated_grants.sql` — grants for the `authenticated` role so the mobile client can read/write its own rows directly with the publishable key (RLS still enforces `auth.uid() = user_id`)
+- `0001_init.sql` — schema (11 tables) + RLS + auth trigger
+- `0002_service_role_grants.sql` — table-level grants for server-side writes
+- `0003_authenticated_grants.sql` — grants for the `authenticated` role so the mobile client can read/write its own rows with the publishable key
 
 ## Rate limiting
 
-`middleware.ts` applies a per-IP token bucket (8/min, burst 8) to `/api/classify` and `/api/generate-plan`. The bucket is in-memory, so it resets on serverless cold start — that is enough as a basic abuse shield. Swapping in an Upstash-Redis-backed bucket is the Phase-5 upgrade path.
+`server/lib/rate-limit.ts` applies a per-IP token bucket (8/min, burst 8) to `/api/classify` and `/api/generate-plan`. In-memory, so it resets on serverless cold start — fine as a basic abuse shield. Upstash-Redis-backed bucket is the upgrade path.
 
-## Environment Variables
+## Guardrails
 
-Server-side (Next.js API routes / EAS build — never bundled into mobile):
-
-- `GEMINI_API_KEY` — optional locally (falls back to keyword classification + Psalm 23 plan)
-- `GEMINI_MODEL_CLASSIFY` / `GEMINI_MODEL_SAFETY` / `GEMINI_MODEL_PLAN` / `GEMINI_MODEL_PLAN_FALLBACK` — override defaults in `lib/env.ts`
-- `SUPABASE_URL` — optional; profile route uses in-memory store when unset
-- `SUPABASE_SERVICE_ROLE_KEY` — required when `SUPABASE_URL` is set
-- `LITCAL_API_BASE` — defaults to LiturgicalCalendarAPI
-- `SENTRY_DSN`, `POSTHOG_API_KEY` — optional in dev, required in prod
-- `LOG_LEVEL` (default `info`), `NODE_ENV` (default `development`)
-
-Public / mobile (bundled into Expo app — safe-to-ship values only):
-
-- `EXPO_PUBLIC_SUPABASE_URL`
-- `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the modern `sb_publishable_…` form)
-- `EXPO_PUBLIC_API_BASE_URL`
-- `EXPO_PUBLIC_SENTRY_DSN`, `EXPO_PUBLIC_POSTHOG_API_KEY` — optional
+- Never impersonate a saint, priest, Jesus, Mary, or spiritual director.
+- Never simulate sacraments, confession, or absolution.
+- Never invent quotations or unverified historical facts.
+- Generated content is labeled `devotional_reflection`, not Church teaching.
+- Crisis/concern severity short-circuits to `SAFETY_REVIEW`, which surfaces crisis resources instead of a plan.
 
 ## Notes
-This project is a portfolio/learning project and is not an official pastoral or theological authority. Generated content is labeled `devotional_reflection` and ships with a teaching-authority disclaimer.
+
+Portfolio / learning project. Not an official pastoral or theological authority. Generated content carries a teaching-authority disclaimer.

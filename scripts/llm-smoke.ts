@@ -8,17 +8,17 @@
 // LLM call). Cost uses rough current public pricing — confirm at
 // https://ai.google.dev/pricing before quoting numbers externally.
 
-import { classifyInput } from "../handlers/classify";
-import { matchSaints } from "../handlers/match-saints";
-import { buildPlan } from "../handlers/generate-plan";
+import { classifyInput } from "../server/handlers/classify";
+import { matchSaints } from "../server/handlers/match-saints";
+import { buildPlan } from "../server/handlers/generate-plan";
 import {
   addUsageObserver,
   getModels,
   removeUsageObserver,
   type LLMUsage,
   type UsageObservation,
-} from "../lib/llm";
-import { isLlmConfigured } from "../lib/env";
+} from "../server/lib/llm";
+import { isLlmConfigured } from "../server/lib/env";
 
 interface Fixture {
   label: string;

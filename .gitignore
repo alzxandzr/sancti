@@ -1,9 +1,8 @@
 node_modules/
-.next/
 dist/
 .expo/
+expo-env.d.ts
 *.log
-*.tsbuildinfo
 .env
 .env.local
 .env.*.local

@@ -3,8 +3,8 @@
 // `callJSON` actually uses: client.models.generateContent() returning
 // { text, usageMetadata } (or the candidate-array form).
 
-import { __setLlmForTest, type LlmClient } from "../lib/llm";
-import { __resetEnvCache } from "../lib/env";
+import { __setLlmForTest, type LlmClient } from "../server/lib/llm";
+import { __resetEnvCache } from "../server/lib/env";
 
 /** Satisfies `isLlmConfigured()` so routes enter the LLM branches while the SDK is stubbed. */
 const DUMMY_GEMINI_KEY_FOR_TESTS = "AIzaSy_test_dummy_key_for_unit_tests_only";

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyInput } from "../handlers/classify";
-import { __resetEnvCache } from "../lib/env";
+import { classifyInput } from "../server/handlers/classify";
+import { __resetEnvCache } from "../server/lib/env";
 import { installFakeLlm, okJsonResponse, rawTextResponse, resetFakeLlm } from "./_helpers";
 
 test("classifyInput short-circuits to SAFETY_REVIEW on heuristic crisis without calling the LLM", async (t) => {

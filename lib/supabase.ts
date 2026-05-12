@@ -1,52 +1,63 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { loadPublicEnv, loadServerEnv } from "./env";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Two clients, two trust levels.
-//
-//   Service-role: server-side only. Bypasses RLS. Used by API routes to write
-//     audit logs and to operate across users (e.g. for cron jobs). Never ship
-//     this key in the mobile bundle.
-//
-//   Public/anon: safe to bundle in the Expo app. Subject to RLS. Used for
-//     auth and for the user-scoped reads/writes a signed-in client performs
-//     directly against Postgres.
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-let cachedServiceClient: SupabaseClient | null = null;
-let cachedPublicClient: SupabaseClient | null = null;
-let serviceClientOverride: SupabaseClient | null = null;
+// AsyncStorage touches `window` at module load, which crashes during Expo's
+// Node-side static render. On the server we hand supabase-js no storage and
+// let it use its built-in memory shim; the browser path still gets persistent
+// AsyncStorage so the anonymous session survives reloads.
+const isBrowser = typeof window !== "undefined";
 
-export const getServiceSupabaseClient = (): SupabaseClient => {
-  if (serviceClientOverride) return serviceClientOverride;
-  if (cachedServiceClient) return cachedServiceClient;
-
-  const env = loadServerEnv();
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error(
-      "Supabase service client requested but SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured.",
-    );
-  }
-  cachedServiceClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
+// Build a stub that defers the env-missing error until a property is actually
+// accessed. The static-render pass loads this module but never calls a
+// method on it — if we threw at module load, every Expo export -p web build
+// without local .env would fail.
+const makeMissingEnvStub = (): SupabaseClient =>
+  new Proxy({} as SupabaseClient, {
+    get() {
+      throw new Error(
+        "EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set. " +
+          "Add them to mobile/.env.local (dev) or the Vercel project env (prod) and restart.",
+      );
+    },
   });
-  return cachedServiceClient;
-};
 
-export const getPublicSupabaseClient = (): SupabaseClient => {
-  if (cachedPublicClient) return cachedPublicClient;
+export const supabase: SupabaseClient =
+  url && key
+    ? createClient(url, key, {
+        auth: {
+          storage: isBrowser ? AsyncStorage : undefined,
+          persistSession: isBrowser,
+          autoRefreshToken: isBrowser,
+          detectSessionInUrl: false,
+        },
+      })
+    : makeMissingEnvStub();
 
-  const env = loadPublicEnv();
-  cachedPublicClient = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
-  return cachedPublicClient;
-};
+/**
+ * Ensure the device has an authenticated user. We use Supabase anonymous
+ * sign-in so every device gets a stable auth.uid() with zero UI — RLS
+ * policies that key off auth.uid() then "just work" for that user.
+ *
+ * Returns the user id, or null if anonymous sign-in is disabled in the
+ * Supabase project (Auth → Providers → Anonymous Sign-Ins). Callers
+ * should fall back to local-only storage in that case.
+ */
+export const ensureSession = async (): Promise<string | null> => {
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.user.id) return data.session.user.id;
 
-// Test hook: inject a stub client. Pass null to clear.
-export const __setServiceSupabaseClientForTest = (client: SupabaseClient | null): void => {
-  serviceClientOverride = client;
-  cachedServiceClient = null;
-};
-
-export const __resetSupabaseCacheForTest = (): void => {
-  cachedServiceClient = null;
-  cachedPublicClient = null;
-  serviceClientOverride = null;
+  const { data: signIn, error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    console.warn(
+      `Supabase anonymous sign-in unavailable (${error.message}). ` +
+        "Falling back to local-only storage. " +
+        "Enable Anonymous Sign-ins in Supabase → Authentication → Providers " +
+        "for cross-device persistence.",
+    );
+    return null;
+  }
+  return signIn.user?.id ?? null;
 };

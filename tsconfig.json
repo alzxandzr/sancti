@@ -1,43 +1,21 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
     "strict": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "allowJs": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "incremental": true,
     "jsx": "react-jsx",
-    "noEmit": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "noEmit": true
   },
   "include": [
-    "next-env.d.ts",
-    "data",
-    "handlers",
-    "lib",
-    "pages",
-    "prompts",
-    "scripts",
-    "tests",
-    "types",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "mobile",
-    ".next"
+    "api/**/*",
+    "app/**/*",
+    "lib/**/*",
+    "server/**/*",
+    "tests/**/*",
+    "theme/**/*",
+    "components/**/*",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ]
 }

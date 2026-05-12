@@ -11,11 +11,11 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const load = (rel) => JSON.parse(readFileSync(resolve(here, rel), 'utf8'));
 
-const saints = load('../data/saints.json');
-const mappings = load('../data/mappings.json');
-const situations = load('../data/situations.json');
-const crisis = load('../data/crisis_resources.json');
-const scripture = load('../data/scripture_books.json');
+const saints = load('../server/data/saints.json');
+const mappings = load('../server/data/mappings.json');
+const situations = load('../server/data/situations.json');
+const crisis = load('../server/data/crisis_resources.json');
+const scripture = load('../server/data/scripture_books.json');
 
 const ROUTES = [
   'VOCATION_DISCERNMENT',

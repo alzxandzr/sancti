@@ -5,8 +5,8 @@ import {
   assertAllCitationsValid,
   formatCitation,
   validateCitation,
-} from "../lib/citations";
-import type { Citation } from "../types";
+} from "../server/lib/citations";
+import type { Citation } from "../server/types";
 
 test("validateCitation accepts valid catechism in [1, 2865]", () => {
   const c: Citation = { kind: "catechism", paragraph: 1700, label: "Dignity of the human person" };

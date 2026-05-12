@@ -6,7 +6,7 @@ import {
   callJSON,
   removeUsageObserver,
   type UsageObservation,
-} from "../lib/llm";
+} from "../server/lib/llm";
 import { installFakeLlm, okJsonResponse, rawTextResponse, resetFakeLlm } from "./_helpers";
 
 const sampleSchema = z.object({
