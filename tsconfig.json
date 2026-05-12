@@ -25,8 +25,8 @@
   },
   "include": [
     "next-env.d.ts",
-    "api",
     "data",
+    "handlers",
     "lib",
     "pages",
     "prompts",
