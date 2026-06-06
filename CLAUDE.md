@@ -9,7 +9,7 @@ Phase 1: Scaffolding
 - Frontend: React Native with Expo (TypeScript)
 - Backend: Next.js-style API routes (TypeScript)
 - Database: Supabase (Postgres, pgvector-ready)
-- AI: Anthropic Claude API
+- AI: Google Gemini API (@google/genai)
 - Liturgical Calendar: LiturgicalCalendarAPI
 - Validation: Zod
 

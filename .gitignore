@@ -1,6 +1,35 @@
 node_modules/
-.next/
 dist/
 .expo/
+expo-env.d.ts
 *.log
 .env
+.env.local
+.env.*.local
+
+# Build outputs
+build/
+ios/
+android/
+
+# Tooling caches
+.eslintcache
+.prettiercache
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+*.swp
+
+# Local Claude Code / agent tooling
+.claude/
+.agents/
+skills-lock.json
+.vercel
